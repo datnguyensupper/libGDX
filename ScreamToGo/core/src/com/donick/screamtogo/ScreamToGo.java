@@ -65,7 +65,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 //		createPhysic2();
 		createPhysic3();
 		createObstacle();
-		createWallLeft();
+//		createWallLeft();
 		setContactListener();
 
 
@@ -83,7 +83,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		// Create two identical sprites slightly offset from each other vertically
 		sprite = new Sprite(img);
-		sprite.setPosition(sprite.getWidth()/2 + 40 -gameWidth/2,-sprite.getHeight()/2 -200);
+		sprite.setPosition(sprite.getWidth()/2 + 40 -gameWidth/2,-sprite.getHeight()/2 -150);
 
 		world = new World(new Vector2(0, -4f),true);
 
@@ -152,7 +152,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 						PIXELS_TO_METERS,
 				(
 						0
-//									MathUtils.random(0,heightObstacle/2)
+//									MathUtils.random(0,heightObstaclere/2)
 				) / PIXELS_TO_METERS);
 		bodyWallLeft = world.createBody(bodyDef2);
 		// Sprite2
@@ -180,8 +180,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox(widthObstacle/2 / PIXELS_TO_METERS, heightObstacle
 				/2 / PIXELS_TO_METERS);
-		float firstX = 60-gameWidth/2+widthObstacle/2;
-		float firstY = -gameHeight/2;
+		float firstX = -gameWidth;
+		float firstY = -gameHeight/2-0;
 		for(int i = 0; i < 4; i++){
 
 			Body body2;
@@ -296,7 +296,9 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	}
 
 	public void move(){
-		camera.translate(5,0);
+
+
+		body.applyForceToCenter(20f,0f,true);
 //		for(int i = 0; i < arrayObstacles.length; i++){
 //
 //			Body body2 = arrayObstacles[i];
@@ -373,13 +375,14 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	@Override
 	public void render () {
 		camera.update();
+
 		checkObstacleOutOfScreen();
-		if(bodyObstacleNeed2Move != null) {
-			bodyObstacleNeed2Move.setTransform(nexXPositionbodyObstacleNeed2Move,
-					bodyObstacleNeed2Move.getTransform().getPosition().y, 0);
-			bodyObstacleNeed2Move = null;
-		}
-		move();
+//		if(bodyObstacleNeed2Move != null) {
+//			bodyObstacleNeed2Move.setTransform(nexXPositionbodyObstacleNeed2Move,
+//					bodyObstacleNeed2Move.getTransform().getPosition().y, 0);
+//			bodyObstacleNeed2Move = null;
+//		}
+//		move();
 		// Step the physics simulation forward at a rate of 60hz
 		world.step(1f/60f, 6, 2);
 
@@ -388,12 +391,15 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 				(body.getPosition().y * PIXELS_TO_METERS) -sprite.getHeight()/2 );
 
 
-		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 
+
+		camera.position.x = sprite.getX();
+		camera.position.y = -50;//sprite.getY();
 		batch.draw(sprite, sprite.getX(), sprite.getY(),sprite.getOriginX(),
 				sprite.getOriginY(),
 				sprite.getWidth(),sprite.getHeight(),sprite.getScaleX(),sprite.

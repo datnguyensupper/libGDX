@@ -16,30 +16,36 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Queue;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import sun.net.www.protocol.file.Handler;
+
 
 import javax.sound.sampled.AudioFormat;
+import java.util.LinkedList;
 import java.util.jar.Manifest;
 
 public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 	short[] data;
-	AudioRecorder recordingDevice;
-	AudioDevice playbackDevice;
+	AudioRecorder recordingDevice = null;
+//	AudioDevice playbackDevice;
 	SpriteBatch batch;
-	Texture imgPlayer,imgObstacle,imgPlayBtn;
+	Texture imgPlayer,imgObstacle,imgPlayBtn,imgTestBtn, imgNormalEye, imgSadEye;
 	ImageButton playButton;
+	Group player;
+	Image normalEyes;
+	Image sadEyes;
 	World world;
 	Body bodyPlayer;
 	Body bodyWallLeft;
 	Body bodyObstacleNeed2Move = null;
 	float nexXPositionbodyObstacleNeed2Move;
-	Body bodyEdgeScreen;
 	Box2DDebugRenderer debugRenderer;
 	Matrix4 debugMatrix;
 	OrthographicCamera camera;
@@ -54,13 +60,23 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	float currentScore = 0;
 	float highScore = 0;
 	Preferences prefs;
-	Stage stage;
 	Label textPopupRestartPoint;
 	Label textPopupRestartTutorial;
 	public boolean canRecordAudio = false;
 	public boolean appIsRunning = false;
 
+	Stage stageGameOver;
+	Stage stageMainGame;
 
+	boolean isDebug = false;
+//	boolean isDebug = true;
+	int debugModeCount = 0;
+
+
+	float maxTimerForRecording = 0.5f;
+	float currentCountTimerForRecording = 0f;
+
+	Device deviceType = Device.ASUS;
 
 	float widthObstacle = 500;
 	float heightObstacle = 700;
@@ -75,7 +91,19 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	final short WORLD_ENTITY = 0x1 << 1; // 0010 or 0x2 in hex
 
     float scaleRatio;
+	private Array<Float> arrayOfVoice1;
+	private Array<Float> arrayOfVoice2;
 
+	float minDeltaVoice;
+	float maxDeltaVoice;
+	float maxRecorder = 0;
+	float minRecorder = 0;
+	float currentVoice = 0;
+
+	public enum Device {
+		A7,
+		ASUS
+	}
 	@Override
 	public void create () {
 		prefs = Gdx.app.getPreferences("My Preferences");
@@ -85,8 +113,13 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		fontNormal.setColor(Color.BLACK);
 		font.setColor(0,0,0,1);
         imgPlayer = new Texture("player.png");
+		imgNormalEye = new Texture("normal_eyes.png");
+		imgSadEye = new Texture("sad_eyes.png");
         imgObstacle = new Texture("obstacle.jpg");
 		imgPlayBtn = new Texture("play-btn.png");
+		imgTestBtn = new Texture("testBtn.jpg");
+		arrayOfVoice1 = new Array<Float>();
+		arrayOfVoice2 = new Array<Float>();
 
 		deviceWidth = Gdx.graphics.getWidth();
 		deviceHeight = Gdx.graphics.getHeight();
@@ -100,16 +133,16 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		createObstacle();
 //		createWallLeft();
 		setContactListener();
+		createMainGameUI();
 		createPopupGameOver();
 
 
-        float aspectRatio = (float)gameWidth/(float)gameHeight;
-        camera = new OrthographicCamera(gameHeight*aspectRatio,gameHeight);
+
 
 
 		if(Gdx.app.getType() != Application.ApplicationType.Desktop &&
 				canRecordAudio){
-			recordAudio();
+			createRecordAudio();
 		}else{
 //			recordAudioTest();
 		}
@@ -123,29 +156,44 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 	public void updateScoreTextUI(){
 
-		font.draw(batch, "Survive in : " + (int)currentScore + " s", camera.position.x - gameWidth/2 + 10, camera.position.y+gameHeight/2-10);
+		if(!isDebug) {
+			font.draw(batch, "Survive in : " + (int) currentScore + " s", camera.position.x - gameWidth / 2 + 10, camera.position.y + gameHeight / 2 - 10);
+		}else{
+			font.draw(batch, "current voice " + currentVoice, camera.position.x - gameWidth / 2 + 10, camera.position.y + gameHeight / 2 - 10);
+		}
+	}
+
+	public void createMainGameUI(){
+		float aspectRatio = (float)gameWidth/(float)gameHeight;
+		camera = new OrthographicCamera(gameHeight*aspectRatio,gameHeight);
+
+		stageMainGame = new Stage(new StretchViewport(gameHeight*aspectRatio,gameHeight));
+
+
+		player = new Group();
+
+		normalEyes = new Image(imgNormalEye);
+		normalEyes.setPosition(25,90);
+		player.addActor(normalEyes);
+
+		sadEyes = new Image(imgSadEye);
+		sadEyes.setPosition(25,90);
+		player.addActor(sadEyes);
+		sadEyes.setVisible(false);
+
+
+
+		stageMainGame.addActor(player);
 	}
 
 	public void createPopupGameOver(){
 
-//		stage = new Stage();
-//		Gdx.input.setInputProcessor(stage);
-//		font = new BitmapFont();
-//		Skin skin = new Skin();
-//		TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
-//		textButtonStyle.font = font;
-//		textButtonStyle.up = skin.getDrawable("play-btn.png");
-//		textButtonStyle.down = skin.getDrawable("play-btn.png");
-//		textButtonStyle.checked = skin.getDrawable("play-btn.png");
-//		TextButton button = new TextButton("Button1", textButtonStyle);
-//		stage.addActor(button);
 
-
-		stage = new Stage(new ScreenViewport());
+		stageGameOver = new Stage(new ScreenViewport());
 
 		Drawable drawable = new TextureRegionDrawable(new TextureRegion(imgPlayBtn));
 		playButton = new ImageButton(drawable);
-//        playButton.setPosition(gameWidth/2,gameHeight/2);
+		playButton.setPosition(deviceWidth/2 - playButton.getWidth()/2,deviceHeight/4);
         playButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
@@ -154,37 +202,51 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-//                restart();
-//                System.out.println("button clicked");
                 return true;
             }
         });
-        stage.addListener(new InputListener(){
+		stageGameOver.addActor(playButton);
+
+		ImageButton testBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(imgTestBtn)));
+		testBtn.setPosition(deviceWidth - testBtn.getWidth(),deviceHeight-testBtn.getHeight());
+		testBtn.addListener(new InputListener(){
+			@Override
+			public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+				debugModeCount++;
+				if(debugModeCount >= 10){
+					isDebug = true;
+				}
+			}
+			@Override
+			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+				return true;
+			}
+		});
+		stageGameOver.addActor(testBtn);
+
+
+
+		stageGameOver.addListener(new InputListener(){
             @Override
             public boolean keyUp(InputEvent event, int keycode) {
-
-
+            	if(Gdx.app.getType() != Application.ApplicationType.Desktop ){
+            		return false;
+				}
                 if(keycode == Input.Keys.RIGHT) {
-
-//			body.setTransform(2,2,0);
-//				body.setLinearVelocity(1f, 0f);
                     move();
                 }
                 if(keycode == Input.Keys.LEFT)
                     bodyPlayer.setLinearVelocity(-10f,0f);
-
                 if(keycode == Input.Keys.UP)
                     jump();
-//			body.applyForceToCenter(0f,10f,true);
                 if(keycode == Input.Keys.DOWN)
                     bodyPlayer.applyForceToCenter(0f, -10f, true);
 
-                return true;
+                return false;
             }
         });
-        playButton.setPosition(deviceWidth/2 - playButton.getWidth()/2,deviceHeight/4);
-		stage.addActor(playButton);
-        Gdx.input.setInputProcessor(stage);
+
+        Gdx.input.setInputProcessor(stageGameOver);
 
 
 
@@ -197,7 +259,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
         textPopupRestartPoint.setPosition(deviceWidth/2,deviceHeight/2+deviceHeight/6);
 //        text.setBounds(0,.2f,20,2);
         textPopupRestartPoint.setFontScale(2f*scaleRatio,2f*scaleRatio);
-        stage.addActor(textPopupRestartPoint);
+		stageGameOver.addActor(textPopupRestartPoint);
 
         textStyle = new Label.LabelStyle();
         textStyle.font = fontNormal;
@@ -207,7 +269,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
         textPopupRestartTutorial.setPosition(deviceWidth/2,0);
 //        text.setBounds(0,.2f,20,2);
         textPopupRestartTutorial.setFontScale(0.6f*scaleRatio,0.6f*scaleRatio);
-        stage.addActor(textPopupRestartTutorial);
+		stageGameOver.addActor(textPopupRestartTutorial);
 
 
     }
@@ -233,16 +295,9 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
         textPopupRestartTutorial.setText("This is a voice game.\n" +
                 "You can control the high note to avoid obstacles through your voice.\n" +
                 "With different sound levels, it can move, small jump, or big jump.");
-//		font.draw(batch, "Current survival : " + currentScore  + " s",camera.position.x-50, camera.position.y+20+100,200, Align.center,false);
-//		font.draw(batch, "Best survival : " + currentScore  + " s",camera.position.x-50, camera.position.y-20+100,200, Align.center,false);
-////        fontNormal.draw(batch, "Best survival : " + currentScore  + " s",camera.position.x-50, camera.position.y-20+100,200, Align.center,false);
-//		fontNormal.draw(batch, "This is a voice game.\n" +
-//				"You can control the high note to avoid obstacles through your voice.\n" +
-//				"With different sound levels, it can move, small jump, or big jump.",camera.position.x-100, camera.position.y-200,200, Align.center,false);
 
-        stage.act(); //Perform ui logic
-//        playButton.draw(batch,1);
-        stage.draw(); //Draw the ui
+		stageGameOver.act(); //Perform ui logic
+		stageGameOver.draw(); //Draw the ui
 
 
 	}
@@ -264,9 +319,14 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		if(!isDead){
 			return;
 		}
+		createPlayerBody();
+
 		currentScore = 0;
 		Sprite spritePlayer = (Sprite)bodyPlayer.getUserData();
 		spritePlayer.setPosition(spritePlayer.getWidth()/2 + 40 -gameWidth/2,-spritePlayer.getHeight()/2 -150);
+		player.setPosition(gameWidth/2 + spritePlayer.getX()-camera.position.x,spritePlayer.getY()+gameHeight/2-camera.position.y);
+
+
 		bodyPlayer.setLinearVelocity(0,0);
 		bodyPlayer.applyForceToCenter(0,0,true);
 		bodyPlayer.setTransform((spritePlayer.getX() + spritePlayer.getWidth()/2) /
@@ -287,16 +347,25 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 			firstX += (widthObstacle + ((Sprite)bodyPlayer.getUserData()).getWidth()*1.5);
 		}
 
+		arrayOfVoice1.clear();
+		arrayOfVoice2.clear();
+		minDeltaVoice = 0;
+		maxDeltaVoice = 0;
 		isDead = false;
 	}
 
-	public void createPhysic3() {
+	public void createPlayerBody(){
 
-		// Create two identical sprites slightly offset from each other vertically
-		Sprite spritePlayer = new Sprite(imgPlayer);
-        spritePlayer.setSize(spritePlayer.getWidth()*1.5f,spritePlayer.getHeight()*1.5f);
+		Sprite spritePlayer;
+		if(bodyPlayer != null){
+			spritePlayer = (Sprite)bodyPlayer.getUserData();
+			world.destroyBody(bodyPlayer);
 
-		world = new World(new Vector2(0, -4f),true);
+		}else{
+			spritePlayer = new Sprite(imgPlayer);
+			spritePlayer.setSize(spritePlayer.getWidth()*1.5f,spritePlayer.getHeight()*1.5f);
+		}
+
 
 		// Both bodies have identical shape
 		PolygonShape shape = new PolygonShape();
@@ -321,10 +390,17 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 //		fixtureDef.isSensor = true;
 		bodyPlayer.createFixture(fixtureDef);
 
+		shape.dispose();
+
+	}
+
+	public void createPhysic3() {
+
+		world = new World(new Vector2(0, -4f),true);
+
+		createPlayerBody();
 
 		debugRenderer = new Box2DDebugRenderer();
-
-		shape.dispose();
 	}
 
 	public void createWallLeft(){
@@ -411,11 +487,23 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 //		System.out.println(spritePlayer.getY());
 		if(spritePlayer.getY() < -800){
 			isDead = true;
+			debugModeCount = 0;
+			isDebug = false;
+		}else if(spritePlayer.getY()< -400 ||
+				bodyPlayer.getLinearVelocity().y<-2){
+			sadEyes.setVisible(true);
+			normalEyes.setVisible(false);
+		}else {
+			sadEyes.setVisible(false);
+			normalEyes.setVisible(true);
 		}
 	}
 
 	public void checkObstacleOutOfScreen(){
 
+		if(bodyPlayer == null){
+			return;
+		}
 
 		Body obstacle = null;
 		float maxXObstaclePosition = 0;
@@ -498,7 +586,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
         }
     }
 	public void jump(){
-		if(isDead){
+		if(isDead || isDebug){
 			return;
 		}
 		System.out.println("Jump");
@@ -506,31 +594,24 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	}
 
 	public void bigJump(){
-		if(isDead){
+		if(isDead || isDebug){
 			return;
 		}
 		System.out.println("big Jump");
-		bodyPlayer.applyForceToCenter(0f,300f,true);
+		bodyPlayer.applyForceToCenter(0f,200f,true);
 	}
 
 	public void move(){
-		if(isDead){
+		if(isDead || isDebug){
 			return;
 		}
 
+		System.out.println("move");
 
 //		System.out.println("Move");
+
+		currentScore += 0.3;
 		bodyPlayer.applyForceToCenter(50f,0f,true);
-//		for(int i = 0; i < arrayObstacles.length; i++){
-//
-//			Body body2 = arrayObstacles[i];
-//			body2.applyForceToCenter(-1f,0f,true);
-//
-//			body2.setTransform(body2.getTransform().getPosition().x- 1/
-//							PIXELS_TO_METERS,
-//					body2.getTransform().getPosition().y,0);
-//
-//		}
 
 	}
 
@@ -542,6 +623,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 								   @Override
 								   public void run() {
 //									   jump();
+
 								   }
 							   }).start();
 						   }
@@ -551,12 +633,164 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		);
 	}
 
-	public void requestPermission() {
-		String[] perms = {"android.permission. WRITE_EXTERNAL_STORAGE"};
+	public float adjustValue(float voice){
+		if(arrayOfVoice1.size < 3) {
+			arrayOfVoice1.add(new Float(voice));
+		}else{
+			arrayOfVoice1.removeIndex(0);
+			arrayOfVoice1.add(new Float(voice));
+		}
+		float min = arrayOfVoice1.get(0).floatValue();
+		float max = arrayOfVoice1.get(0).floatValue();
+		for(Float v: arrayOfVoice1) {
+			float vF = v.floatValue();
+			if(vF < min){
+				min = vF;
+			}else if(vF > max){
+				max = vF;
+			}
+		}
 
-		int permsRequestCode = 200;
+		float delta = (max - min);
+		if(arrayOfVoice2.size < 3) {
+			arrayOfVoice2.add(new Float(delta));
+		}else{
+			arrayOfVoice2.removeIndex(0);
+			arrayOfVoice2.add(new Float(delta));
+		}
+		minDeltaVoice = arrayOfVoice2.get(0).floatValue();
+		maxDeltaVoice = arrayOfVoice2.get(0).floatValue();
+		for(Float v: arrayOfVoice2) {
+			float vF = v.floatValue();
+			if(vF < minDeltaVoice){
+				minDeltaVoice = vF;
+			}else if(vF > maxDeltaVoice){
+				maxDeltaVoice = vF;
+			}
+		}
+		return delta;
 	}
+
+	public float adjustValue2(float voice){
+		if(arrayOfVoice1.size < 5) {
+			arrayOfVoice1.add(new Float(voice));
+		}else{
+			arrayOfVoice1.removeIndex(0);
+			arrayOfVoice1.add(new Float(voice));
+		}
+		minDeltaVoice = arrayOfVoice1.get(0).floatValue();
+		maxDeltaVoice = arrayOfVoice1.get(0).floatValue();
+		for(Float v: arrayOfVoice1) {
+			float vF = v.floatValue();
+			if(vF < minDeltaVoice){
+				minDeltaVoice = vF;
+			}else if(vF > maxDeltaVoice){
+				maxDeltaVoice = vF;
+			}
+		}
+		return voice;
+	}
+
+	public float adjustValue3(float voice){
+		if(arrayOfVoice1.size < 5) {
+			arrayOfVoice1.add(new Float(voice));
+		}else{
+			arrayOfVoice1.removeIndex(0);
+			arrayOfVoice1.add(new Float(voice));
+		}
+		minDeltaVoice = arrayOfVoice1.get(0).floatValue();
+		maxDeltaVoice = arrayOfVoice1.get(0).floatValue();
+		for(Float v: arrayOfVoice1) {
+			float vF = v.floatValue();
+			if(vF < minDeltaVoice){
+				minDeltaVoice = vF;
+			}else if(vF > maxDeltaVoice){
+				maxDeltaVoice = vF;
+			}
+		}
+
+		if(minDeltaVoice < -16){
+			deviceType = Device.A7;
+		}else{
+			deviceType = Device.ASUS;
+		}
+		return voice;
+	}
+
+	public boolean isMin(float voice){
+		if (deviceType == Device.A7){
+			return (voice < -20);
+		}
+		return (voice >= -1);
+	}
+
+	public boolean isMiddle(float voice){
+		if (deviceType == Device.A7){
+			return (voice < 0 && voice > -12);
+		}
+		return (voice > 0 || voice < -5);
+	}
+
+	public boolean isMax(float voice){
+		if (deviceType == Device.A7){
+			return (voice > 0 || voice < -30);
+		}
+		return (voice > 5 || voice < -10);
+	}
+
 	public void recordAudio(){
+
+		if(!isDead && recordingDevice != null) {
+			recordingDevice.read(data, 0, data.length);
+			String result = "";
+			int average = 0;
+			int numberOfDevide = 0;
+			for (int i = 0; i < data.length; i++) {
+				average += data[i];
+				if(data[i] != 0){
+					numberOfDevide++;
+				}
+			}
+			if(numberOfDevide != 0) {
+				average /= numberOfDevide;
+			}
+
+
+			currentVoice = adjustValue3(average);
+			float min = minRecorder;
+			float middle = (maxRecorder+minRecorder)/2;
+			float max = maxRecorder;
+			System.out.println("delta "  + currentVoice);
+
+
+
+			//-19 is average
+			if (isMax(currentVoice)) {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						bigJump();
+					}
+				});
+			} else if (isMiddle(currentVoice)) {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						move();
+						jump();
+					}
+				});
+			} else if (isMin(currentVoice)) {
+				Gdx.app.postRunnable(new Runnable() {
+					@Override
+					public void run() {
+						move();
+					}
+				});
+			}
+		}
+	}
+	public void createRecordAudio(){
 
 		int sampleRate = 16000 ; // 44100 for music
 
@@ -566,79 +800,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		boolean isMono = true;
 		data = new short[sampleRate]; //0.5s
 
-		playbackDevice = Gdx.audio.newAudioDevice(samples, isMono);
+//		playbackDevice = Gdx.audio.newAudioDevice(samples, isMono);
 		recordingDevice = Gdx.audio.newAudioRecorder(samples, isMono);
-
-		final int interval = 1000; // 1 Second
-		Handler handler = new Handler();
-		Runnable runnable = new Runnable(){
-			public void run() {
-				if(!isDead) {
-					recordingDevice.read(data, 0, data.length);
-					String result = "";
-					int average = 0;
-					for (int i = 0; i < data.length; i++) {
-						average += data[i];
-					}
-//									   System.out.println("Voidce " + average);
-					//-19 is average
-					if (average > 40) {
-//										   move();
-						bigJump();
-					} else if (average > 20) {
-						move();
-						jump();
-					} else if (average > -19000) {
-						currentScore += 0.3;
-						move();
-					}
-				}
-			}
-		};
-
-		handler.postAtTime(runnable, System.currentTimeMillis()+interval);
-		handler.postDelayed(runnable, interval);
-
-//		Timer.schedule(new Timer.Task(){
-//						   @Override
-//						   public void run() {
-//							   new Thread(new Runnable() {
-//								   @Override
-//								   public void run() {
-////								   	return;
-//									   if(!isDead) {
-//										   recordingDevice.read(data, 0, data.length);
-//										   String result = "";
-//										   int average = 0;
-//										   for (int i = 0; i < data.length; i++) {
-//											   average += data[i];
-//										   }
-////									   System.out.println("Voidce " + average);
-//										   //-19 is average
-//										   if (average > 40) {
-////										   move();
-//											   bigJump();
-//										   } else if (average > 20) {
-//											   move();
-//											   jump();
-//										   } else if (average > -19000) {
-//											   currentScore += 0.3;
-//											   move();
-//										   }
-//									   }
-////									   System.out.println("Record: End ->" + average*1.0f/data.length);
-//								   }
-//							   }).start();
-//						   }
-//					   }
-//				, 0.3f        //    (delay)
-//				, 0.3f     //    (seconds)
-//		);
-
-//		recordingDevice.read(samples, 0, samples.length);
-//		playbackDevice.writeSamples(samples, 0, samples.length);
-//		recordingDevice.dispose();
-//		playbackDevice.dispose();
 	}
 
 	public void showGameUI(){
@@ -647,28 +810,23 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 			return;
 		}
 		Sprite spritePlayer = (Sprite)bodyPlayer.getUserData();
+
+		spritePlayer.setPosition((bodyPlayer.getPosition().x * PIXELS_TO_METERS) - spritePlayer.getWidth()/2 ,
+				(bodyPlayer.getPosition().y * PIXELS_TO_METERS) -spritePlayer.getHeight()/2 );
+		player.setPosition(gameWidth/2 + spritePlayer.getX()-camera.position.x,spritePlayer.getY()+gameHeight/2-camera.position.y);
+
 		// draw spritePlayer to body position
-		batch.draw(
-				spritePlayer,
-				spritePlayer.getX(), spritePlayer.getY(),
-				spritePlayer.getOriginX(), spritePlayer.getOriginY(),
-				spritePlayer.getWidth(),spritePlayer.getHeight(),
-				spritePlayer.getScaleX(),spritePlayer.getScaleY(),spritePlayer.getRotation());
+		spritePlayer.draw(batch);
 
 		for(int i = 0; i < arrayObstacles.length; i++){
 
 			Body bodyObstacle = arrayObstacles[i];
 			Sprite spriteObstacle = (Sprite)bodyObstacle.getUserData();
-			batch.draw(
-					spriteObstacle,
-					spriteObstacle.getX(),spriteObstacle.getY(),
-					spriteObstacle.getOriginX(),spriteObstacle.getOriginY(),
-					spriteObstacle.getWidth(),spriteObstacle.getHeight(),
-					spriteObstacle.getScaleX(),spriteObstacle.getScaleY(),
-					spriteObstacle.getRotation());
-
-
+			spriteObstacle.draw(batch);
 		}
+
+
+
 
 		updateScoreTextUI();
 	}
@@ -677,6 +835,21 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 	@Override
 	public void render () {
+
+		float deltaTime = Gdx.graphics.getDeltaTime();
+		if(currentCountTimerForRecording >= maxTimerForRecording){
+
+			minDeltaVoice = 0;
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					recordAudio();
+				}
+			}).start();
+			currentCountTimerForRecording = 0;
+		}else{
+			currentCountTimerForRecording+=deltaTime;
+		}
 		camera.update();
 
 		checkObstacleOutOfScreen();
@@ -691,9 +864,6 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		if(!isDead) {
 			world.step(1f / 60f, 6, 2);
 		}
-		Sprite spritePlayer = (Sprite)bodyPlayer.getUserData();
-		spritePlayer.setPosition((bodyPlayer.getPosition().x * PIXELS_TO_METERS) - spritePlayer.getWidth()/2 ,
-				(bodyPlayer.getPosition().y * PIXELS_TO_METERS) -spritePlayer.getHeight()/2 );
 
 
 		Gdx.gl.glClearColor(1f, 1f, 1f, 0);
@@ -702,9 +872,15 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 
+
+		showGameUI();
+		showPopupGameOver();
+
+
 		/**
 		 * set camera position
 		 */
+		Sprite spritePlayer = (Sprite)bodyPlayer.getUserData();
 		int basePositionX = -864;
 		int deltaBetweenCameraAndPlayer = 200;
 		if(spritePlayer.getX() >= (basePositionX+deltaBetweenCameraAndPlayer)){
@@ -712,16 +888,15 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		}else{
 			camera.position.x = (basePositionX+deltaBetweenCameraAndPlayer);
 		}
-		camera.position.y = -50;//sprite.getY();
-//		System.out.println(camera.position.x);
+		camera.position.y = -50;
 
-//        stage.getViewport().update((int)camera.viewportWidth,(int)camera.viewportHeight);
-
-		showGameUI();
-		showPopupGameOver();
 
 		batch.end();
 
+		if(!isDead) {
+			stageMainGame.act(); //Perform ui logic
+			stageMainGame.draw(); //Draw the ui
+		}
 
 		// Scale down the sprite batches projection matrix to box2D size
 		debugMatrix = batch.getProjectionMatrix().cpy().scale(PIXELS_TO_METERS,
@@ -737,6 +912,10 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
         imgObstacle.dispose();
 		world.dispose();
 		imgPlayBtn.dispose();
+		imgTestBtn.dispose();
+		recordingDevice.dispose();
+		imgNormalEye.dispose();
+		imgSadEye.dispose();
 	}
 
 	@Override
@@ -752,20 +931,6 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
     @Override
 	public boolean keyTyped(char character) {
 		return false;
-	}
-
-	public boolean checkSpriteIsClick(int x, int y, Sprite sprite){
-
-		x -= gameWidth/2;
-		y -= gameHeight/2;
-		float spriteX = sprite.getX() - camera.position.x + sprite.getWidth()/2;
-		float spriteY = sprite.getY() - camera.position.y;
-
-		System.out.print("x " +x + " y " + y);
-		System.out.println("xbtn " + spriteX + " ybtn " + spriteY);
-
-		boolean isInButton = (x > spriteX && x < spriteX + sprite.getWidth() && y > spriteY && y < spriteY + sprite.getHeight());
-		return isInButton;
 	}
 
 	// On touch we apply force from the direction of the users touch.

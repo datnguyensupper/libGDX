@@ -1,21 +1,21 @@
 android {
-//    productFlavors {
-//        x86 {
-//            ndk {
-//                abiFilter "x86"
-//            }
-//        }
+    productFlavors {
+        x86 {
+            ndk {
+                abiFilter "x86"
+            }
+        }
 //        armv7 {
 //            ndk {
 //                abiFilter "armeabi-v7a"
 //            }
 //        }
-//        arm {
-//            ndk {
-//                abiFilter "armeabi"
-//            }
-//        }
-//    }
+        arm {
+            ndk {
+                abiFilter "armeabi"
+            }
+        }
+    }
     signingConfigs {
         config {
             keyAlias 'donick'
@@ -46,6 +46,7 @@ android {
         applicationId "com.donick.screamtogo"
         minSdkVersion 9
         targetSdkVersion 25
+        signingConfig signingConfigs.config
     }
     buildTypes {
         release {

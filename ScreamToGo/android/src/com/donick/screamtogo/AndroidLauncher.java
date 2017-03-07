@@ -44,7 +44,7 @@ public class AndroidLauncher extends AndroidApplication {
 				boolean writeAccepted = grantResults[0]== PackageManager.PERMISSION_GRANTED;
 				if(writeAccepted) {
 					if(listener.appIsRunning){
-						listener.recordAudio();
+						listener.createRecordAudio();
 					}else {
 						listener.canRecordAudio = true;
 					}

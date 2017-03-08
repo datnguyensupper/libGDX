@@ -36,11 +36,10 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	AudioRecorder recordingDevice = null;
 //	AudioDevice playbackDevice;
 	SpriteBatch batch;
-	Texture imgPlayer,imgObstacle,imgPlayBtn,imgTestBtn, imgNormalEye, imgSadEye;
+	Texture imgPlayer,imgObstacle,imgPlayBtn,imgTestBtn, imgNormalEye, imgSadEye, imgWing, imgLeg;
 	ImageButton playButton;
 	Group player;
-	Image normalEyes;
-	Image sadEyes;
+	Image normalEyes, sadEyes, wing, leg1, leg2;
 	World world;
 	Body bodyPlayer;
 	Body bodyWallLeft;
@@ -115,6 +114,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
         imgPlayer = new Texture("player.png");
 		imgNormalEye = new Texture("normal_eyes.png");
 		imgSadEye = new Texture("sad_eyes.png");
+		imgWing = new Texture("wing_note.png");
+		imgLeg = new Texture("leg.png");
         imgObstacle = new Texture("obstacle.jpg");
 		imgPlayBtn = new Texture("play-btn.png");
 		imgTestBtn = new Texture("testBtn.jpg");
@@ -172,6 +173,10 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		player = new Group();
 
+		Image playerImage = new Image(imgPlayer);
+		playerImage.setScale(1.5f);
+		player.addActor(playerImage);
+
 		normalEyes = new Image(imgNormalEye);
 		normalEyes.setPosition(25,90);
 		player.addActor(normalEyes);
@@ -181,6 +186,21 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		player.addActor(sadEyes);
 		sadEyes.setVisible(false);
 
+		wing = new Image(imgWing);
+		wing.setScaleY(0.7f);
+		wing.setOrigin(imgWing.getWidth(),imgWing.getHeight());
+		wing.setPosition(0,0);
+		player.addActor(wing);
+
+		leg2 = new Image(imgLeg);
+		leg2.setOrigin(imgLeg.getWidth()/2,imgLeg.getHeight());
+		leg2.setPosition(80,-23);
+		player.addActor(leg2);
+
+		leg1 = new Image(imgLeg);
+		leg1.setOrigin(imgLeg.getWidth()/2,imgLeg.getHeight());
+		leg1.setPosition(20,-23);
+		player.addActorAt(0,leg1);
 
 
 		stageMainGame.addActor(player);
@@ -369,8 +389,9 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		// Both bodies have identical shape
 		PolygonShape shape = new PolygonShape();
-		shape.setAsBox(spritePlayer.getWidth()/2 / PIXELS_TO_METERS, spritePlayer.getHeight()
-				/2 / PIXELS_TO_METERS);
+		shape.setAsBox(spritePlayer.getWidth()/2 / PIXELS_TO_METERS,
+				(spritePlayer.getHeight()
+				+20)/2 / PIXELS_TO_METERS);
 
 		// Sprite1's Physics body
 		BodyDef bodyDef = new BodyDef();
@@ -812,11 +833,11 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		Sprite spritePlayer = (Sprite)bodyPlayer.getUserData();
 
 		spritePlayer.setPosition((bodyPlayer.getPosition().x * PIXELS_TO_METERS) - spritePlayer.getWidth()/2 ,
-				(bodyPlayer.getPosition().y * PIXELS_TO_METERS) -spritePlayer.getHeight()/2 );
+				(bodyPlayer.getPosition().y * PIXELS_TO_METERS+7) -spritePlayer.getHeight()/2 );
 		player.setPosition(gameWidth/2 + spritePlayer.getX()-camera.position.x,spritePlayer.getY()+gameHeight/2-camera.position.y);
 
 		// draw spritePlayer to body position
-		spritePlayer.draw(batch);
+//		spritePlayer.draw(batch);
 
 		for(int i = 0; i < arrayObstacles.length; i++){
 
@@ -901,7 +922,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		// Scale down the sprite batches projection matrix to box2D size
 		debugMatrix = batch.getProjectionMatrix().cpy().scale(PIXELS_TO_METERS,
 				PIXELS_TO_METERS, 0);
-//		debugRenderer.render(world, debugMatrix);
+		debugRenderer.render(world, debugMatrix);
 
 	}
 	
@@ -916,6 +937,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		recordingDevice.dispose();
 		imgNormalEye.dispose();
 		imgSadEye.dispose();
+		imgWing.dispose();
+		imgLeg.dispose();
 	}
 
 	@Override

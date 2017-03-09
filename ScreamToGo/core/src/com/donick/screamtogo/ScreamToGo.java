@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.physics.box2d.*;
@@ -27,6 +28,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 
 import javax.sound.sampled.AudioFormat;
+import java.beans.FeatureDescriptor;
 import java.util.LinkedList;
 import java.util.jar.Manifest;
 
@@ -36,12 +38,16 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	AudioRecorder recordingDevice = null;
 //	AudioDevice playbackDevice;
 	SpriteBatch batch;
-	Texture imgPlayer,imgObstacle,imgPlayBtn,imgTestBtn, imgNormalEye, imgSadEye, imgWing, imgLeg;
+	Texture imgPlayer,imgObstacle,imgPlayBtn,imgTestBtn, imgNormalEye, imgSadEye, imgWing, imgLeg, imgThorn, imgPlayerDead;
 	ImageButton playButton;
 	Group player;
-	Image normalEyes, sadEyes, wing, leg1, leg2;
+	Image playerImage,normalEyes, sadEyes, wing, leg1, leg2;
+	int wingDirection = 1;
+	int legDirection = 1;
 	World world;
 	Body bodyPlayer;
+	Body bodyEnemy;
+	FixtureDef fixturePlayer;
 	Body bodyWallLeft;
 	Body bodyObstacleNeed2Move = null;
 	float nexXPositionbodyObstacleNeed2Move;
@@ -56,6 +62,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	Body[] arrayObstacles;
 	float yPositionOfObstacles;
 	boolean isDead = true;
+	float startSpritePlayerPosition = 0;
 	float currentScore = 0;
 	float highScore = 0;
 	Preferences prefs;
@@ -112,11 +119,13 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		fontNormal.setColor(Color.BLACK);
 		font.setColor(0,0,0,1);
         imgPlayer = new Texture("player.png");
+		imgPlayerDead = new Texture("player_dead.png");
 		imgNormalEye = new Texture("normal_eyes.png");
 		imgSadEye = new Texture("sad_eyes.png");
 		imgWing = new Texture("wing_note.png");
 		imgLeg = new Texture("leg.png");
         imgObstacle = new Texture("obstacle.jpg");
+		imgThorn = new Texture("thorn.png");
 		imgPlayBtn = new Texture("play-btn.png");
 		imgTestBtn = new Texture("testBtn.jpg");
 		arrayOfVoice1 = new Array<Float>();
@@ -158,7 +167,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	public void updateScoreTextUI(){
 
 		if(!isDebug) {
-			font.draw(batch, "Survive in : " + (int) currentScore + " s", camera.position.x - gameWidth / 2 + 10, camera.position.y + gameHeight / 2 - 10);
+			font.draw(batch, "Survive in : " + (int) currentScore + " m", camera.position.x - gameWidth / 2 + 10, camera.position.y + gameHeight / 2 - 10);
 		}else{
 			font.draw(batch, "current voice " + currentVoice, camera.position.x - gameWidth / 2 + 10, camera.position.y + gameHeight / 2 - 10);
 		}
@@ -173,7 +182,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		player = new Group();
 
-		Image playerImage = new Image(imgPlayer);
+		playerImage = new Image(imgPlayer);
 		playerImage.setScale(1.5f);
 		player.addActor(playerImage);
 
@@ -188,18 +197,20 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		wing = new Image(imgWing);
 		wing.setScaleY(0.7f);
-		wing.setOrigin(imgWing.getWidth(),imgWing.getHeight());
-		wing.setPosition(0,0);
+		wing.setOrigin(imgWing.getWidth()*2/3.0f,imgWing.getHeight()-20);
+		wing.setPosition(0,20);
 		player.addActor(wing);
 
 		leg2 = new Image(imgLeg);
 		leg2.setOrigin(imgLeg.getWidth()/2,imgLeg.getHeight());
-		leg2.setPosition(80,-23);
+		leg2.setPosition(80,-18);
+		leg2.setRotation(5);
 		player.addActor(leg2);
 
 		leg1 = new Image(imgLeg);
 		leg1.setOrigin(imgLeg.getWidth()/2,imgLeg.getHeight());
-		leg1.setPosition(20,-23);
+		leg1.setPosition(20,-18);
+		leg1.setRotation(-5);
 		player.addActorAt(0,leg1);
 
 
@@ -311,7 +322,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 //		spriteBtnPlay.setPosition(camera.position.x- spriteBtnPlay.getWidth()/2,camera.position.y- spriteBtnPlay.getHeight()/2);
 
-        textPopupRestartPoint.setText("Current survival : " + (int)currentScore  + " s\n\n"+"Best survival : " + (int)currentScore  + " s");
+        textPopupRestartPoint.setText("Current survival : " + (int)currentScore  + " m\n\n"+"Best survival : " + (int)currentScore  + " m");
         textPopupRestartTutorial.setText("This is a voice game.\n" +
                 "You can control the high note to avoid obstacles through your voice.\n" +
                 "With different sound levels, it can move, small jump, or big jump.");
@@ -341,11 +352,15 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		}
 		createPlayerBody();
 
+		playerImage.setDrawable(new SpriteDrawable(new Sprite(imgPlayer)));
+
 		currentScore = 0;
 		Sprite spritePlayer = (Sprite)bodyPlayer.getUserData();
 		spritePlayer.setPosition(spritePlayer.getWidth()/2 + 40 -gameWidth/2,-spritePlayer.getHeight()/2 -150);
+		startSpritePlayerPosition = spritePlayer.getX();
 		player.setPosition(gameWidth/2 + spritePlayer.getX()-camera.position.x,spritePlayer.getY()+gameHeight/2-camera.position.y);
 
+//		createEnemy(spritePlayer.getX());
 
 		bodyPlayer.setLinearVelocity(0,0);
 		bodyPlayer.applyForceToCenter(0,0,true);
@@ -357,13 +372,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		float firstX = -gameWidth+120;
 		yPositionOfObstacles = -gameHeight/2-300;
 		for(int i = 0; i < arrayObstacles.length; i++){
-
 			Body bodyObstacle = arrayObstacles[i];
-			Sprite spriteObstacle = (Sprite)bodyObstacle.getUserData();
-
-
 			setObstaclePosition(bodyObstacle,firstX);
-
 			firstX += (widthObstacle + ((Sprite)bodyPlayer.getUserData()).getWidth()*1.5);
 		}
 
@@ -372,6 +382,52 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		minDeltaVoice = 0;
 		maxDeltaVoice = 0;
 		isDead = false;
+	}
+
+	public void createEnemy(float x){
+
+		if(currentScore < 20){
+			return;
+		}
+		if(bodyEnemy != null){
+			float space = (bodyPlayer.getPosition().x- bodyEnemy.getPosition().x);
+//			System.out.println("delta position " + space);
+			if(space > 15) {
+				world.destroyBody(bodyEnemy);
+				bodyEnemy = null;
+			}else{
+				return;
+			}
+
+		}
+		PolygonShape shape = new PolygonShape();
+		shape.setAsBox(imgThorn.getWidth()/2 / PIXELS_TO_METERS, imgThorn.getHeight()
+				/2 / PIXELS_TO_METERS);
+
+		Sprite spriteEnemy = new Sprite(imgThorn);
+		spriteEnemy.setPosition(x,gameHeight/2-spriteEnemy.getHeight()*2/3.0f);
+
+		BodyDef bodyDef2 = new BodyDef();
+		bodyDef2.type = BodyDef.BodyType.StaticBody;
+		bodyDef2.position.set(
+				new Vector2(
+						(spriteEnemy.getX() + spriteEnemy.getWidth()/2) / PIXELS_TO_METERS,
+						(spriteEnemy.getY() + spriteEnemy.getHeight()/2) / PIXELS_TO_METERS));
+		bodyEnemy = world.createBody(bodyDef2);
+
+
+		bodyEnemy.setUserData(spriteEnemy);
+		// Sprite2
+		FixtureDef fixtureDef2 = new FixtureDef();
+		fixtureDef2.shape = shape;
+		fixtureDef2.density = 0f;
+		fixtureDef2.restitution = 0f;
+		bodyEnemy.createFixture(fixtureDef2);
+
+
+		bodyEnemy.setGravityScale(0);
+//		}
+		shape.dispose();
 	}
 
 	public void createPlayerBody(){
@@ -391,7 +447,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox(spritePlayer.getWidth()/2 / PIXELS_TO_METERS,
 				(spritePlayer.getHeight()
-				+20)/2 / PIXELS_TO_METERS);
+				+10)/2 / PIXELS_TO_METERS);
 
 		// Sprite1's Physics body
 		BodyDef bodyDef = new BodyDef();
@@ -400,16 +456,16 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		bodyPlayer.setUserData(spritePlayer);
 
 		// Sprite1
-		FixtureDef fixtureDef = new FixtureDef();
-		fixtureDef.shape = shape;
+		fixturePlayer = new FixtureDef();
+		fixturePlayer.shape = shape;
 //		fixtureDef.density = 0.1f;
 //		fixtureDef.restitution = 0.5f;
-		fixtureDef.density = 0f;
-		fixtureDef.restitution = 0f;
-//		fixtureDef.filter.categoryBits = PHYSICS_ENTITY;
-//		fixtureDef.filter.maskBits = WORLD_ENTITY;
+		fixturePlayer.density = 0f;
+		fixturePlayer.restitution = 0f;
+//		fixturePlayer.filter.categoryBits = PHYSICS_ENTITY;
+//		fixturePlayer.filter.maskBits = WORLD_ENTITY;
 //		fixtureDef.isSensor = true;
-		bodyPlayer.createFixture(fixtureDef);
+		bodyPlayer.createFixture(fixturePlayer);
 
 		shape.dispose();
 
@@ -432,8 +488,6 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		BodyDef bodyDef2 = new BodyDef();
 		bodyDef2.type = BodyDef.BodyType.DynamicBody;
-//		bodyDef2.type = BodyDef.BodyType.KinematicBody;
-//			bodyDef2.type = BodyDef.BodyType.DynamicBody;
 		bodyDef2.position.set(-gameWidth/2 /
 						PIXELS_TO_METERS,
 				(
@@ -468,8 +522,6 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 				/2 / PIXELS_TO_METERS);
 		for(int i = 0; i < numberOfObstacle; i++){
 
-
-
             Sprite spriteObstacle = new Sprite(imgObstacle);
             spriteObstacle.setSize(widthObstacle,heightObstacle);
 
@@ -492,12 +544,13 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 			arrayObstacles[i] = body2;
 			body2.setGravityScale(0);
-
-
-
 		}
-
 		shape.dispose();
+
+
+
+
+
 	}
 
 	public void checkDead(){
@@ -559,24 +612,21 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 			@Override
 			public void beginContact(Contact contact) {
 
-				if(((contact.getFixtureA().getBody() == bodyWallLeft)||
-					contact.getFixtureB().getBody() == bodyWallLeft) &&
-						bodyObstacleNeed2Move == null) {
-					Body obstacle = (contact.getFixtureA().getBody() == bodyWallLeft)?contact.getFixtureB().getBody():contact.getFixtureA().getBody();
-					float maxXObstaclePosition = 0;
-					for(int i = 0; i < arrayObstacles.length; i++){
 
-						Body body2 = arrayObstacles[i];
-						float xPosition = body2.getTransform().getPosition().x;
-						if(xPosition > maxXObstaclePosition){
-							maxXObstaclePosition = xPosition;
-						}
+				if((contact.getFixtureA().getBody() == bodyPlayer &&
+						contact.getFixtureB().getBody() == bodyEnemy) ||
+				(contact.getFixtureB().getBody() == bodyPlayer &&
+						contact.getFixtureA().getBody() == bodyEnemy)){
+					// falling down forever
+					Filter boxBreakFilter = new Filter();
+					boxBreakFilter.categoryBits = 1;
+					boxBreakFilter.groupIndex = 2;
+					boxBreakFilter.maskBits = (short)0;
+					bodyPlayer.getFixtureList().get(0).setFilterData(boxBreakFilter);
 
-					}
 
-					bodyObstacleNeed2Move = obstacle;
-					nexXPositionbodyObstacleNeed2Move = maxXObstaclePosition+ (widthObstacle+((Sprite)bodyPlayer.getUserData()).getWidth()*1.5f)/
-							PIXELS_TO_METERS;
+					playerImage.setDrawable(new SpriteDrawable(new Sprite(imgPlayerDead)));
+//					playerImage.setColor(Color.BLUE);
 				}
 			}
 
@@ -631,7 +681,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 //		System.out.println("Move");
 
-		currentScore += 0.3;
+//		currentScore += 0.3;
 		bodyPlayer.applyForceToCenter(50f,0f,true);
 
 	}
@@ -840,12 +890,33 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 //		spritePlayer.draw(batch);
 
 		for(int i = 0; i < arrayObstacles.length; i++){
-
 			Body bodyObstacle = arrayObstacles[i];
 			Sprite spriteObstacle = (Sprite)bodyObstacle.getUserData();
 			spriteObstacle.draw(batch);
 		}
 
+		if(bodyEnemy != null){
+			Sprite spriteEnemy = (Sprite)bodyEnemy.getUserData();
+			spriteEnemy.draw(batch);
+		}
+
+
+		if(bodyPlayer.getLinearVelocity().y > 0){
+			wing.setRotation(wing.getRotation()+2*wingDirection);
+			if(wing.getRotation() > 20 || wing.getRotation() < -20){
+				wingDirection = (-wingDirection);
+			}
+			leg1.setRotation(0);
+			leg2.setRotation(0);
+		}else if(bodyPlayer.getLinearVelocity().y == 0) {
+			if (bodyPlayer.getLinearVelocity().x > 0) {
+				leg1.setRotation(leg1.getRotation() + 1 * legDirection);
+				leg2.setRotation(leg2.getRotation() - 1 * legDirection);
+				if (leg1.getRotation() > 20 || leg1.getRotation() < -20) {
+					legDirection = -legDirection;
+				}
+			}
+		}
 
 
 
@@ -856,6 +927,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 	@Override
 	public void render () {
+
 
 		float deltaTime = Gdx.graphics.getDeltaTime();
 		if(currentCountTimerForRecording >= maxTimerForRecording){
@@ -879,6 +951,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 			setObstaclePosition(bodyObstacleNeed2Move,nexXPositionbodyObstacleNeed2Move*PIXELS_TO_METERS);
 			bodyObstacleNeed2Move = null;
+			createEnemy(nexXPositionbodyObstacleNeed2Move*PIXELS_TO_METERS);
 		}
 //		move();
 		// Step the physics simulation forward at a rate of 60hz
@@ -902,6 +975,9 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		 * set camera position
 		 */
 		Sprite spritePlayer = (Sprite)bodyPlayer.getUserData();
+
+		currentScore = (spritePlayer.getX()-startSpritePlayerPosition)/100.0f;
+
 		int basePositionX = -864;
 		int deltaBetweenCameraAndPlayer = 200;
 		if(spritePlayer.getX() >= (basePositionX+deltaBetweenCameraAndPlayer)){
@@ -922,7 +998,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		// Scale down the sprite batches projection matrix to box2D size
 		debugMatrix = batch.getProjectionMatrix().cpy().scale(PIXELS_TO_METERS,
 				PIXELS_TO_METERS, 0);
-		debugRenderer.render(world, debugMatrix);
+//		debugRenderer.render(world, debugMatrix);
 
 	}
 	
@@ -930,6 +1006,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	public void dispose () {
 		// Hey, I actually did some clean up in a code sample!
 		imgPlayer.dispose();
+		imgPlayerDead.dispose();
         imgObstacle.dispose();
 		world.dispose();
 		imgPlayBtn.dispose();
@@ -939,6 +1016,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		imgSadEye.dispose();
 		imgWing.dispose();
 		imgLeg.dispose();
+		imgThorn.dispose();
 	}
 
 	@Override

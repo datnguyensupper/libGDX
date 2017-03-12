@@ -110,7 +110,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 	public enum Device {
 		A7,
-		ASUS
+		ASUS,
+		Oppo
 	}
 	@Override
 	public void create () {
@@ -690,64 +691,6 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	}
 
 	public float adjustValue(float voice){
-		if(arrayOfVoice1.size < 3) {
-			arrayOfVoice1.add(new Float(voice));
-		}else{
-			arrayOfVoice1.removeIndex(0);
-			arrayOfVoice1.add(new Float(voice));
-		}
-		float min = arrayOfVoice1.get(0).floatValue();
-		float max = arrayOfVoice1.get(0).floatValue();
-		for(Float v: arrayOfVoice1) {
-			float vF = v.floatValue();
-			if(vF < min){
-				min = vF;
-			}else if(vF > max){
-				max = vF;
-			}
-		}
-
-		float delta = (max - min);
-		if(arrayOfVoice2.size < 3) {
-			arrayOfVoice2.add(new Float(delta));
-		}else{
-			arrayOfVoice2.removeIndex(0);
-			arrayOfVoice2.add(new Float(delta));
-		}
-		minDeltaVoice = arrayOfVoice2.get(0).floatValue();
-		maxDeltaVoice = arrayOfVoice2.get(0).floatValue();
-		for(Float v: arrayOfVoice2) {
-			float vF = v.floatValue();
-			if(vF < minDeltaVoice){
-				minDeltaVoice = vF;
-			}else if(vF > maxDeltaVoice){
-				maxDeltaVoice = vF;
-			}
-		}
-		return delta;
-	}
-
-	public float adjustValue2(float voice){
-		if(arrayOfVoice1.size < 5) {
-			arrayOfVoice1.add(new Float(voice));
-		}else{
-			arrayOfVoice1.removeIndex(0);
-			arrayOfVoice1.add(new Float(voice));
-		}
-		minDeltaVoice = arrayOfVoice1.get(0).floatValue();
-		maxDeltaVoice = arrayOfVoice1.get(0).floatValue();
-		for(Float v: arrayOfVoice1) {
-			float vF = v.floatValue();
-			if(vF < minDeltaVoice){
-				minDeltaVoice = vF;
-			}else if(vF > maxDeltaVoice){
-				maxDeltaVoice = vF;
-			}
-		}
-		return voice;
-	}
-
-	public float adjustValue3(float voice){
 		if(arrayOfVoice1.size < 5) {
 			arrayOfVoice1.add(new Float(voice));
 		}else{
@@ -767,8 +710,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		if(minDeltaVoice < -16){
 			deviceType = Device.A7;
-		}else{
-			deviceType = Device.ASUS;
+		}else if(minDeltaVoice <= -4 ){
+			deviceType = Device.Oppo;
 		}
 		return voice;
 	}
@@ -776,6 +719,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	public boolean isMin(float voice){
 		if (deviceType == Device.A7){
 			return (voice < -20);
+		}else if(deviceType == Device.Oppo){
+			return (voice >= 0 || voice < -10 );
 		}
 		return (voice >= -1);
 	}
@@ -783,6 +728,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	public boolean isMiddle(float voice){
 		if (deviceType == Device.A7){
 			return (voice < 0 && voice > -12);
+		}else if(deviceType == Device.Oppo){
+			return (voice < -40);
 		}
 		return (voice > 0 || voice < -5);
 	}
@@ -790,6 +737,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	public boolean isMax(float voice){
 		if (deviceType == Device.A7){
 			return (voice > 0 || voice < -30);
+		}else if(deviceType == Device.Oppo){
+			return (voice < -150 || voice >= 2);
 		}
 		return (voice > 5 || voice < -10);
 	}
@@ -812,11 +761,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 			}
 
 
-			currentVoice = adjustValue3(average);
-			float min = minRecorder;
-			float middle = (maxRecorder+minRecorder)/2;
-			float max = maxRecorder;
-			System.out.println("delta "  + currentVoice);
+			currentVoice = adjustValue(average);
+			System.out.println("delta "  + currentVoice + " device " + deviceType);
 
 
 

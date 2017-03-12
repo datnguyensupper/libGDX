@@ -38,7 +38,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 	AudioRecorder recordingDevice = null;
 //	AudioDevice playbackDevice;
 	SpriteBatch batch;
-	Texture imgPlayer,imgObstacle,imgPlayBtn,imgTestBtn, imgNormalEye, imgSadEye, imgWing, imgLeg, imgPlayerDead;
+	Texture imgPlayer,imgObstacle,imgPlayBtn,imgTestBtn, imgNormalEye, imgSadEye, imgWing, imgLeg, imgPlayerDead,imgHowToPlay;
 	ImageButton playButton;
 	Group player;
 	Image playerImage,normalEyes, sadEyes, wing, leg1, leg2;
@@ -83,6 +83,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 	float maxTimerForRecording = 0.5f;
 	float currentCountTimerForRecording = 0f;
+	float gapBetween2Obtacles;
 
 	Device deviceType = Device.ASUS;
 
@@ -130,6 +131,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
         imgObstacle = new Texture("obstacle.jpg");
 		imgPlayBtn = new Texture("play-btn.png");
 		imgTestBtn = new Texture("testBtn.jpg");
+		imgHowToPlay = new Texture("howtoplay.jpg");
 		arrayOfVoice1 = new Array<Float>();
 		arrayOfVoice2 = new Array<Float>();
 
@@ -141,6 +143,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		enemyController = new EnemyController();
 
+		gapBetween2Obtacles = imgPlayer.getWidth()*1.5f*1.3f;
 //		createPhysic();
 //		createPhysic2();
 		createPhysic3();
@@ -228,7 +231,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		Drawable drawable = new TextureRegionDrawable(new TextureRegion(imgPlayBtn));
 		playButton = new ImageButton(drawable);
-		playButton.setPosition(deviceWidth/2 - playButton.getWidth()/2,deviceHeight/4);
+		playButton.setPosition(deviceWidth/2 - playButton.getWidth()/2,deviceHeight/2);
         playButton.addListener(new InputListener(){
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
@@ -290,8 +293,8 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
         textStyle.font = font;
         textStyle.fontColor = Color.BLACK;
         textPopupRestartPoint = new Label("",textStyle);
-        textPopupRestartPoint.setAlignment(Align.center);
-        textPopupRestartPoint.setPosition(deviceWidth/2,deviceHeight/2+deviceHeight/6);
+        textPopupRestartPoint.setAlignment(Align.center|Align.top);
+        textPopupRestartPoint.setPosition(deviceWidth/2,deviceHeight-100);
 //        text.setBounds(0,.2f,20,2);
         textPopupRestartPoint.setFontScale(2f*scaleRatio,2f*scaleRatio);
 		stageGameOver.addActor(textPopupRestartPoint);
@@ -300,10 +303,15 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
         textStyle.font = fontNormal;
         textStyle.fontColor = Color.BLACK;
         textPopupRestartTutorial = new Label("",textStyle);
-        textPopupRestartTutorial.setAlignment(Align.bottom | Align.center );
-        textPopupRestartTutorial.setPosition(deviceWidth/2,0);
+        textPopupRestartTutorial.setAlignment(Align.center|Align.right);
+        textPopupRestartTutorial.setPosition(deviceWidth/2,deviceHeight/4);
 //        text.setBounds(0,.2f,20,2);
         textPopupRestartTutorial.setFontScale(0.6f*scaleRatio,0.6f*scaleRatio);
+
+		Image howToPlay = new Image(imgHowToPlay);
+		howToPlay.setPosition(deviceWidth/2 + 50,deviceHeight/4 - howToPlay.getHeight()/2.0f);
+		stageGameOver.addActor(howToPlay);
+
 		stageGameOver.addActor(textPopupRestartTutorial);
 
 
@@ -326,10 +334,12 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 //		spriteBtnPlay.setPosition(camera.position.x- spriteBtnPlay.getWidth()/2,camera.position.y- spriteBtnPlay.getHeight()/2);
 
-        textPopupRestartPoint.setText("Current survival : " + (int)currentScore  + " m\n\n"+"Best survival : " + (int)currentScore  + " m");
-        textPopupRestartTutorial.setText("This is a voice game.\n" +
-                "You can control the high note to avoid obstacles through your voice.\n" +
-                "With different sound levels, it can move, small jump, or big jump.");
+        textPopupRestartPoint.setText("Current survival : " + (int)currentScore  + " m\n\n"+"Best survival : " + (int)highScore  + " m");
+        textPopupRestartTutorial.setText(
+        		"This is a voice game. You can control the high \n" +
+                "note to avoid obstacles through your voice.\n" +
+                "With different sound levels,\n"+
+				" it can move, small jump, or big jump.");
 
 		stageGameOver.act(); //Perform ui logic
 		stageGameOver.draw(); //Draw the ui
@@ -379,7 +389,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		for(int i = 0; i < arrayObstacles.length; i++){
 			Body bodyObstacle = arrayObstacles[i];
 			setObstaclePosition(bodyObstacle,firstX);
-			firstX += (widthObstacle + ((Sprite)bodyPlayer.getUserData()).getWidth()*1.2);
+			firstX += (widthObstacle + gapBetween2Obtacles);
 		}
 
 		arrayOfVoice1.clear();
@@ -586,7 +596,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 
 		if(obstacle != null) {
 			bodyObstacleNeed2Move = obstacle;
-			nexXPositionbodyObstacleNeed2Move = maxXObstaclePosition + (widthObstacle + ((Sprite)bodyPlayer.getUserData()).getWidth() * 1.5f) /
+			nexXPositionbodyObstacleNeed2Move = maxXObstaclePosition + (widthObstacle/2 + gapBetween2Obtacles) /
 					PIXELS_TO_METERS;
 		}
 
@@ -950,6 +960,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		imgSadEye.dispose();
 		imgWing.dispose();
 		imgLeg.dispose();
+		imgHowToPlay.dispose();
 
 		enemyController.dispose();
 	}

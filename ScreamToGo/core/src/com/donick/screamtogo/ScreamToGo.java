@@ -986,7 +986,7 @@ public class ScreamToGo extends ApplicationAdapter implements InputProcessor {
 		// Scale down the sprite batches projection matrix to box2D size
 		debugMatrix = batch.getProjectionMatrix().cpy().scale(PIXELS_TO_METERS,
 				PIXELS_TO_METERS, 0);
-		debugRenderer.render(world, debugMatrix);
+//		debugRenderer.render(world, debugMatrix);
 
 	}
 	

@@ -6,11 +6,11 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
 
 public class PianoTiles extends ApplicationAdapter {
 	SpriteBatch batch;
-	Texture img,imgTile;
 
 	float gameWidth;
 	float gameHeight;
@@ -19,13 +19,11 @@ public class PianoTiles extends ApplicationAdapter {
 	float scaleRatio;
 	OrthographicCamera camera;
 
-	private Array<Float> arrayOfTiles;
+	MainGameScene mainGame;
 	
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
-		img = new Texture("badlogic.jpg");
-		imgTile = new Texture("tile.jpg");
 
 		deviceWidth = Gdx.graphics.getWidth();
 		deviceHeight = Gdx.graphics.getHeight();
@@ -34,26 +32,29 @@ public class PianoTiles extends ApplicationAdapter {
 		scaleRatio = deviceHeight/gameHeight;
 		camera = new OrthographicCamera(gameWidth,gameHeight);
 
-		arrayOfTiles = new Array<Float>();
+		mainGame = new MainGameScene(gameWidth, gameHeight, deviceWidth, deviceHeight);
 	}
+
 
 	@Override
 	public void render () {
+		float deltaTime = Gdx.graphics.getDeltaTime();
+
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
-		batch.draw(img,-img.getWidth()/2,-img.getHeight()/2);
 		batch.end();
+
+		mainGame.render(deltaTime);
 
 	}
 	
 	@Override
 	public void dispose () {
 		batch.dispose();
-		img.dispose();
-		imgTile.dispose();
+		mainGame.dispose();
 	}
 }

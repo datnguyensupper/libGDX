@@ -27,13 +27,15 @@ public class MainGameScene {
     float tileWidth, tileHeight;
     float numberOfTile = 4;
 
-    float tileSpeed = 200;
+    float tileSpeed = 300;
 
     Stage stage;
 
     Random random = new Random();
 
     boolean isDead = false;
+//    boolean isGod = false;
+    boolean isGod = true;
 
     public MainGameScene(float _gameWidth, float _gameHeight, float _deviceWidth, float _deviceHeight ){
         gameWidth = _gameWidth;
@@ -66,6 +68,7 @@ public class MainGameScene {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
 
+                boolean isWin = false;
                 for(int i = 0; i < arrayOfTiles.size; i++){
                     Tile tile = arrayOfTiles.get(i);
                     tile.touchUp(x,y);
@@ -73,8 +76,12 @@ public class MainGameScene {
                         arrayOfTiles.removeValue(tile, true);
                         tile.removeFromState();
                         i--;
+                        isWin = true;
                     }
 
+                }
+                if(isWin == false){
+                    doDead();
                 }
             }
             @Override
@@ -90,7 +97,7 @@ public class MainGameScene {
         Gdx.input.setInputProcessor(stage);
     }
 
-    float checkLastTilePosition(){
+    void checkAndSpawnNextTile(){
         float lastTilePosition = gameHeight;
         for(Tile tile : arrayOfTiles){
             float nextTilePosition = tile.getY() + tile.getHeight();
@@ -98,12 +105,8 @@ public class MainGameScene {
                 lastTilePosition = nextTilePosition;
             }
         }
-        return lastTilePosition;
-    }
-    void checkAndSpawnNextTile(){
-        float lastTilePosition = checkLastTilePosition();
-        if(lastTilePosition <= gameHeight){
 
+        if(lastTilePosition <= gameHeight){
             // create tiles
             float randomX = random.nextInt(4) * tileWidth;
             createTitles(randomX,lastTilePosition);
@@ -112,20 +115,35 @@ public class MainGameScene {
 
     void createTitles(float x, float y){
 
+        //tab tile
         Tile tile = new Tile(x,y,tileWidth,tileHeight,stage,imgTile);
+
+        // hold tile
+//        Tile tile = new Tile(x,y,tileWidth,tileHeight,stage,imgTile,2,tileSpeed);
         arrayOfTiles.add(tile);
+    }
+
+    void doDead(){
+        if(!isGod) {
+            isDead = true;
+        }
     }
 
     void checkDead(){
         float firstTilePosition = gameHeight;
+        Tile deleteTile = null;
         for(Tile tile : arrayOfTiles){
             float nextTilePosition = tile.getY();
             if(nextTilePosition < firstTilePosition){
                 firstTilePosition = nextTilePosition;
+                deleteTile = tile;
             }
         }
         if(firstTilePosition < 0){
-            isDead = true;
+            doDead();
+            deleteTile.removeFromState();
+            arrayOfTiles.removeValue(deleteTile, true);
+
         }
 
     }
@@ -133,10 +151,13 @@ public class MainGameScene {
 
     public void render (float delta) {
 
+        if(delta > 1){
+            delta /= 60f;
+        }
         checkDead();
         if(!isDead) {
             for (Tile tile : arrayOfTiles) {
-                tile.setY(tile.getY() - delta * tileSpeed);
+                tile.moveDown(tileSpeed,delta);
             }
         }
 

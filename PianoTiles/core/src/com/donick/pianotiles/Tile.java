@@ -3,6 +3,7 @@ package com.donick.pianotiles;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -26,7 +27,8 @@ public class Tile extends Group{
     private float touchDuration;
     private Image imageDot;
     private Image background;
-    private  float ratio;
+
+    private Vector2 previousTouch = Vector2.Zero;
 
     /**
      * create tab tile
@@ -37,9 +39,8 @@ public class Tile extends Group{
      * @param stage
      * @param img
      */
-    Tile(float x, float y,float _ratio, float tileWidth, float tileHeight, Stage stage, Texture img){
+    Tile(float x, float y, float tileWidth, float tileHeight, Stage stage, Texture img){
         super();
-        ratio = 1;// _ratio;
 
 //        x = 450;y = 800;
         background = new Image(img);
@@ -64,30 +65,25 @@ public class Tile extends Group{
      * @param duration
      * @param speed
      */
-    Tile(float x, float y,float ratio, float tileWidth, float tileHeight, Stage stage, Texture img, Texture dot, float duration, float speed){
-//        super(img);
-//        touchDuration = duration;
-//        float availableHeigh = speed * duration;
-//
-//        setSize(tileWidth, Math.max(availableHeigh, tileHeight));
-//
-//        parent = new Group();
-//        parent.setPosition(x,y);
-//        parent.addActor(this);
-//
-//        imageDot = new Image(dot);
-//        imageDot.setPosition(tileWidth/2, 10);
-////        addAc
-//
-//
-//        stage.addActor(parent);
-//        type = TileType.TILE_HOLD;
-    }
+    Tile(float x, float y,float tileWidth, float tileHeight, Stage stage, Texture img, Texture dot, float duration, float speed){
+        super();
+        touchDuration = duration;
+        float availableHeigh = Math.max(speed * duration,tileHeight);
 
-//    @Override
-//    public float getHeight(){
-//        return background.getHeight();
-//    }
+        setSize(tileWidth, availableHeigh);
+
+        background = new Image(img);
+        background.setSize(tileWidth, availableHeigh);
+        this.addActor(background);
+
+        imageDot = new Image(dot);
+        imageDot.setPosition(tileWidth/2, 10);
+        addActor(imageDot);
+
+        setPosition(x, y);
+        stage.addActor(this);
+        type = TileType.TILE_HOLD;
+    }
 
 
     private boolean isInRegion(float x, float y){
@@ -98,38 +94,25 @@ public class Tile extends Group{
         return (x < maxX && x > minX && y < maxY && y > minY );
     }
 
-//    @Override
-//    public float getX(){
-//        return parent.getX();
-//    }
-//
-//    @Override
-//    public float getY(){
-//        float yPosition = parent.getY();
-//        return yPosition/ratio;
-//    }
-//
-//    @Override
-//    public void setY(float newY){
-//
-//        parent.setY(newY*ratio);
-//    }
-//
-//    @Override
-//    public void setPosition(float newX, float newY){
-//        setX(newX);
-//        setY(newY);
-//    }
-
     public void moveDown(float speed, float delta){
         float translate = delta*speed;
         setY(getY() - translate);
+    }
+
+    public void updatePositionDot(float y){
+        if(type != TileType.TILE_HOLD) return;
+
+        float yPosition = y - getY();
+        imageDot.setY(yPosition);
     }
 
     public void touchMove(float x, float y){
         if(startTouch){
             if(!isInRegion(x,y)){
                 isFail = true;
+            }else{
+                previousTouch.x = x;
+                previousTouch.y = y;
             }
         }
     }
@@ -142,6 +125,14 @@ public class Tile extends Group{
     public void touchDown(float x, float y){
         if(isInRegion(x,y)){
             startTouch = true;
+            previousTouch.x = x;
+            previousTouch.y = y;
+        }
+    }
+
+    public void render(){
+        if(startTouch){
+            updatePositionDot(previousTouch.y);
         }
     }
 

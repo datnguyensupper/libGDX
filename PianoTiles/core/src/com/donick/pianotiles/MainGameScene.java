@@ -16,7 +16,7 @@ import java.util.Random;
  * Created by dinonguyen on 3/16/2017.
  */
 public class MainGameScene {
-    Texture imgTile;
+    Texture imgTile,imgDotTile;
     private Array<Tile> arrayOfTiles;
 
     float gameWidth;
@@ -44,6 +44,7 @@ public class MainGameScene {
         deviceHeight = _deviceHeight;
 
         imgTile = new Texture("tile.jpg");
+        imgDotTile = new Texture("dot.png");
 
         arrayOfTiles = new Array<Tile>();
 
@@ -118,10 +119,10 @@ public class MainGameScene {
     void createTitles(float x, float y){
 
         //tab tile
-        Tile tile = new Tile(x,y,deviceWidth/gameWidth,tileWidth,tileHeight,stage,imgTile);
+//        Tile tile = new Tile(x,y,tileWidth,tileHeight,stage,imgTile);
 
         // hold tile
-//        Tile tile = new Tile(x,y,tileWidth,tileHeight,stage,imgTile,2,tileSpeed);
+        Tile tile = new Tile(x,y,tileWidth,tileHeight,stage,imgTile,imgDotTile,2,tileSpeed);
         arrayOfTiles.add(tile);
     }
 
@@ -161,6 +162,7 @@ public class MainGameScene {
         if(!isDead) {
             for (Tile tile : arrayOfTiles) {
                 tile.moveDown(tileSpeed,delta);
+                tile.render();
             }
         }
 
@@ -171,6 +173,7 @@ public class MainGameScene {
 
     public void dispose () {
         imgTile.dispose();
+        imgDotTile.dispose();
     }
 
 }

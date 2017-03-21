@@ -48,6 +48,8 @@ public class MainGameScene {
         arrayOfTiles = new Array<Tile>();
 
         stage = new Stage(new StretchViewport(gameWidth,gameHeight));
+        tileWidth = 90;//gameWidth/numberOfTile;
+        tileHeight = 160;//gameHeight/numberOfTile;
         tileWidth = gameWidth/numberOfTile;
         tileHeight = gameHeight/numberOfTile;
 
@@ -116,7 +118,7 @@ public class MainGameScene {
     void createTitles(float x, float y){
 
         //tab tile
-        Tile tile = new Tile(x,y,tileWidth,tileHeight,stage,imgTile);
+        Tile tile = new Tile(x,y,deviceWidth/gameWidth,tileWidth,tileHeight,stage,imgTile);
 
         // hold tile
 //        Tile tile = new Tile(x,y,tileWidth,tileHeight,stage,imgTile,2,tileSpeed);
@@ -151,9 +153,10 @@ public class MainGameScene {
 
     public void render (float delta) {
 
-        if(delta > 1){
-            delta /= 60f;
-        }
+//        if(delta > 1){
+//            delta /= 60f;
+//        }
+        delta = 0.01f;
         checkDead();
         if(!isDead) {
             for (Tile tile : arrayOfTiles) {

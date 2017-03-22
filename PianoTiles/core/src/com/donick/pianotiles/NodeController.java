@@ -35,11 +35,33 @@ public class NodeController {
         result.add(new NodeInfo(result.get(result.size-1).endTime,28.6f));
         result.add(new NodeInfo(result.get(result.size-1).endTime,29.4f));
         result.add(new NodeInfo(result.get(result.size-1).endTime,29.7f));
-//        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
-//        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
-//        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
-//        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
-//        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,30f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,30.6f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,30.9f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,31.2f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,31.5f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,31.9f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,32.4f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,32.9f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,33.3f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,33.6f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,34.5f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,34.8f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,35.4f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,35.7f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,36f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,36.6f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,36.9f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,37.2f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,37.5f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,37.8f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
+        result.add(new NodeInfo(result.get(result.size-1).endTime,f));
         return result;
     }
 }

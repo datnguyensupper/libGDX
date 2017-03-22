@@ -20,7 +20,9 @@ public class Tile extends Group{
         TILE_HOLD
     }
 
-    boolean startTouch;
+    float startMusicPosition;
+    float endMusicPosition;
+    private boolean startTouch;
     private boolean isFinish = false;
     private boolean isFail = false;
     private TileType type;
@@ -39,7 +41,7 @@ public class Tile extends Group{
      * @param stage
      * @param img
      */
-    Tile(float x, float y, float tileWidth, float tileHeight, Stage stage, Texture img){
+    Tile(float x, float y,float _startMusicPosition, float _endMusicPosition, float tileWidth, float tileHeight, Stage stage, Texture img){
         super();
 
 //        x = 450;y = 800;
@@ -52,23 +54,27 @@ public class Tile extends Group{
         stage.addActor(this);
 
         type = TileType.TILE_TAB;
+        startMusicPosition = _startMusicPosition;
+        endMusicPosition = _endMusicPosition;
     }
 
     /**
      * create long press tile
      * @param x
      * @param y
+     * @param _startMusicPosition
+     * @param _endMusicPosition
      * @param tileWidth
      * @param tileHeight
      * @param stage
      * @param img
-     * @param duration
+     * @param dot
      * @param speed
      */
-    Tile(float x, float y,float tileWidth, float tileHeight, Stage stage, Texture img, Texture dot, float duration, float speed){
+    Tile(float x, float y,float _startMusicPosition,float _endMusicPosition, float tileWidth, float tileHeight, Stage stage, Texture img, Texture dot, float speed){
         super();
-        touchDuration = duration;
-        float availableHeigh = Math.max(speed * duration,tileHeight);
+        touchDuration = _endMusicPosition-_startMusicPosition;
+        float availableHeigh = Math.max(speed * touchDuration,tileHeight);
 
         setSize(tileWidth, availableHeigh);
 
@@ -83,6 +89,8 @@ public class Tile extends Group{
         setPosition(x, y);
         stage.addActor(this);
         type = TileType.TILE_HOLD;
+        startMusicPosition = _startMusicPosition;
+        endMusicPosition = _endMusicPosition;
     }
 
 
@@ -109,7 +117,8 @@ public class Tile extends Group{
     public void touchMove(float x, float y){
         if(startTouch){
             if(!isInRegion(x,y)){
-                isFail = true;
+//                isFail = true;
+                isFinish = true;
             }else{
                 previousTouch.x = x;
                 previousTouch.y = y;
@@ -122,12 +131,14 @@ public class Tile extends Group{
         }
     }
 
-    public void touchDown(float x, float y){
+    public boolean touchDown(float x, float y){
         if(isInRegion(x,y)){
             startTouch = true;
             previousTouch.x = x;
             previousTouch.y = y;
+            return true;
         }
+        return false;
     }
 
     public void render(){

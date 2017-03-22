@@ -2,6 +2,7 @@ package com.donick.pianotiles;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -17,7 +18,10 @@ import java.util.Random;
  */
 public class MainGameScene {
     Texture imgTile,imgDotTile;
+
+    private Array<NodeInfo> nodeArray;
     private Array<Tile> arrayOfTiles;
+    private  Array<PlayingSoundAdvande> arrayOfPlayer = null;
 
     float gameWidth;
     float gameHeight;
@@ -27,7 +31,7 @@ public class MainGameScene {
     float tileWidth, tileHeight;
     float numberOfTile = 4;
 
-    float tileSpeed = 300;
+    float tileSpeed = 350;
 
     Stage stage;
 
@@ -36,6 +40,7 @@ public class MainGameScene {
     boolean isDead = false;
 //    boolean isGod = false;
     boolean isGod = true;
+
 
     public MainGameScene(float _gameWidth, float _gameHeight, float _deviceWidth, float _deviceHeight ){
         gameWidth = _gameWidth;
@@ -55,6 +60,21 @@ public class MainGameScene {
         tileHeight = gameHeight/numberOfTile;
 
         addEventListener();
+        createArrayOfPlayer();
+        createNodeArray();
+    }
+
+    void createArrayOfPlayer(){
+        int numberOfPlayer = 4;
+        arrayOfPlayer = new Array<PlayingSoundAdvande>();
+        for(int i = 0; i < numberOfPlayer; i++){
+            PlayingSoundAdvande player = new PlayingSoundAdvande(Gdx.files.internal("music/Level1_InspirationalPianoMusic.mp3"));
+            arrayOfPlayer.add(player);
+        }
+    }
+
+    void createNodeArray(){
+        nodeArray = NodeController.createNodeArraySong1();
     }
 
     void addEventListener(){
@@ -89,8 +109,12 @@ public class MainGameScene {
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                Tile chosenTile = null;
                 for(Tile tile: arrayOfTiles){
-                    tile.touchDown(x,y);
+                    if(tile.touchDown(x,y)) chosenTile = tile;
+                }
+                if(chosenTile != null){
+                    playerSoundByNextFreePlayer(chosenTile);
                 }
                 return true;
             }
@@ -98,6 +122,22 @@ public class MainGameScene {
         });
 
         Gdx.input.setInputProcessor(stage);
+    }
+
+    void playerSoundByNextFreePlayer(Tile tile){
+        PlayingSoundAdvande chosenPlayer = null;
+        if(arrayOfPlayer != null) {
+            for (int i = 0; i < arrayOfPlayer.size; i++) {
+                PlayingSoundAdvande player = arrayOfPlayer.get(i);
+                if (!player.isPlaying()) {
+                    chosenPlayer = player;
+                    break;
+                }
+            }
+        }
+        if(chosenPlayer != null){
+            chosenPlayer.play(tile.startMusicPosition,tile.endMusicPosition);
+        }
     }
 
     void checkAndSpawnNextTile(){
@@ -117,12 +157,15 @@ public class MainGameScene {
     }
 
     void createTitles(float x, float y){
+        if(nodeArray.size == 0) return ;
 
+        NodeInfo nodeInfo = nodeArray.get(0);
+        nodeArray.removeValue(nodeInfo,true);
         //tab tile
-//        Tile tile = new Tile(x,y,tileWidth,tileHeight,stage,imgTile);
+        Tile tile = new Tile(x,y,nodeInfo.startTime,nodeInfo.endTime,tileWidth,tileHeight,stage,imgTile);
 
         // hold tile
-        Tile tile = new Tile(x,y,tileWidth,tileHeight,stage,imgTile,imgDotTile,2,tileSpeed);
+//        Tile tile = new Tile(x,y,startPosition,2,tileWidth,tileHeight,stage,imgTile,imgDotTile,tileSpeed);
         arrayOfTiles.add(tile);
     }
 
@@ -157,13 +200,16 @@ public class MainGameScene {
 //        if(delta > 1){
 //            delta /= 60f;
 //        }
-        delta = 0.01f;
+//        delta = 0.01f;
         checkDead();
         if(!isDead) {
             for (Tile tile : arrayOfTiles) {
                 tile.moveDown(tileSpeed,delta);
                 tile.render();
             }
+            if(arrayOfPlayer != null)  for (int i = 0; i < arrayOfPlayer.size; i++) arrayOfPlayer.get(i).render();
+
+
         }
 
         stage.act(); //Perform ui logic
@@ -174,6 +220,10 @@ public class MainGameScene {
     public void dispose () {
         imgTile.dispose();
         imgDotTile.dispose();
+        for(int i = 0; i < arrayOfPlayer.size; i++){
+            PlayingSoundAdvande player = arrayOfPlayer.get(i);
+            player.dispose();
+        }
     }
 
 }

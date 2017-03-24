@@ -17,7 +17,7 @@ import java.util.Random;
  * Created by dinonguyen on 3/16/2017.
  */
 public class MainGameScene {
-    Texture imgTile,imgDotTile;
+    Texture imgTile,imgDotTile,imgBG;
 
     private Array<NodeInfo> nodeArray;
     private Array<Tile> arrayOfTiles;
@@ -31,12 +31,13 @@ public class MainGameScene {
     float tileWidth, tileHeight;
     float numberOfTile = 4;
 
-    float tileSpeed = 350;
+    float tileSpeed = 400;
 
     Stage stage;
 
     Random random = new Random();
 
+    boolean isStartGame = false;
     boolean isDead = false;
 //    boolean isGod = false;
     boolean isGod = true;
@@ -49,11 +50,16 @@ public class MainGameScene {
         deviceHeight = _deviceHeight;
 
         imgTile = new Texture("tile.jpg");
+        imgBG = new Texture("space-1.jpg");
         imgDotTile = new Texture("dot.png");
 
         arrayOfTiles = new Array<Tile>();
 
         stage = new Stage(new StretchViewport(gameWidth,gameHeight));
+
+        Image background = new Image(imgBG);
+        stage.addActor(background);
+
         tileWidth = 90;//gameWidth/numberOfTile;
         tileHeight = 160;//gameHeight/numberOfTile;
         tileWidth = gameWidth/numberOfTile;
@@ -62,6 +68,7 @@ public class MainGameScene {
         addEventListener();
         createArrayOfPlayer();
         createNodeArray();
+        createFirst4Tile();
     }
 
     void createArrayOfPlayer(){
@@ -82,6 +89,9 @@ public class MainGameScene {
 
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
+                if(!isStartGame){
+                    return;
+                }
                 for(Tile tile: arrayOfTiles){
                     tile.touchMove(x,y);
                 }
@@ -91,6 +101,16 @@ public class MainGameScene {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
 
+                if(!isStartGame){
+                    Tile tile = arrayOfTiles.get(0);
+                    tile.touchUp(x,y);
+                    if(tile.checkFinish()){
+                        arrayOfTiles.removeValue(tile, true);
+                        tile.removeFromState();
+                        isStartGame = true;
+                    }
+                    return;
+                }
                 boolean isWin = false;
                 for(int i = 0; i < arrayOfTiles.size; i++){
                     Tile tile = arrayOfTiles.get(i);
@@ -109,12 +129,18 @@ public class MainGameScene {
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                Tile chosenTile = null;
-                for(Tile tile: arrayOfTiles){
-                    if(tile.touchDown(x,y)) chosenTile = tile;
-                }
-                if(chosenTile != null){
-                    playerSoundByNextFreePlayer(chosenTile);
+
+                if(!isStartGame){
+                    Tile tile = arrayOfTiles.get(0);
+                    if (tile.touchDown(x, y)) playerSoundByNextFreePlayer(tile);
+                }else {
+                    Tile chosenTile = null;
+                    for (Tile tile : arrayOfTiles) {
+                        if (tile.touchDown(x, y)) chosenTile = tile;
+                    }
+                    if (chosenTile != null) {
+                        playerSoundByNextFreePlayer(chosenTile);
+                    }
                 }
                 return true;
             }
@@ -152,21 +178,36 @@ public class MainGameScene {
         if(lastTilePosition <= gameHeight){
             // create tiles
             float randomX = random.nextInt(4) * tileWidth;
-            createTitles(randomX,lastTilePosition);
+            createTitles(randomX,lastTilePosition,false);
         }
     }
 
-    void createTitles(float x, float y){
+    void createFirst4Tile(){
+        for(int i = 0; i < 4; i++){
+            float randomX = random.nextInt(4) * tileWidth;
+            createTitles(randomX,tileHeight*i, i==0);
+        }
+    }
+
+    void createTitles(float x, float y, boolean isStart){
         if(nodeArray.size == 0) return ;
 
         NodeInfo nodeInfo = nodeArray.get(0);
         nodeArray.removeValue(nodeInfo,true);
         //tab tile
-        Tile tile = new Tile(x,y,nodeInfo.startTime,nodeInfo.endTime,tileWidth,tileHeight,stage,imgTile);
+        Tile tile = new Tile(x,y,nodeInfo.startTime,nodeInfo.endTime,tileWidth,tileHeight,stage,imgTile,isStart);
 
         // hold tile
 //        Tile tile = new Tile(x,y,startPosition,2,tileWidth,tileHeight,stage,imgTile,imgDotTile,tileSpeed);
         arrayOfTiles.add(tile);
+        if(nodeArray.size <= 25)
+            tileSpeed = 400*3f;
+        else if(nodeArray.size <= 50)
+            tileSpeed = 400*2.5f;
+        else if(nodeArray.size <= 100)
+            tileSpeed = 400*2f;
+        else if(nodeArray.size <= 125)
+            tileSpeed = 400*1.5f;
     }
 
     void doDead(){
@@ -202,23 +243,23 @@ public class MainGameScene {
 //        }
 //        delta = 0.01f;
         checkDead();
-        if(!isDead) {
+        if(!isDead && isStartGame) {
+//            System.out.println(tileSpeed);
             for (Tile tile : arrayOfTiles) {
                 tile.moveDown(tileSpeed,delta);
                 tile.render();
             }
             if(arrayOfPlayer != null)  for (int i = 0; i < arrayOfPlayer.size; i++) arrayOfPlayer.get(i).render();
-
-
+            checkAndSpawnNextTile();
         }
 
         stage.act(); //Perform ui logic
         stage.draw(); //Draw the ui
-        checkAndSpawnNextTile();
     }
 
     public void dispose () {
         imgTile.dispose();
+        imgBG.dispose();
         imgDotTile.dispose();
         for(int i = 0; i < arrayOfPlayer.size; i++){
             PlayingSoundAdvande player = arrayOfPlayer.get(i);

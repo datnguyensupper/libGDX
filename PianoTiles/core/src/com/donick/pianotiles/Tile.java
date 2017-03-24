@@ -1,12 +1,17 @@
 package com.donick.pianotiles;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.utils.Align;
 
 import java.awt.geom.Point2D;
 
@@ -29,6 +34,7 @@ public class Tile extends Group{
     private float touchDuration;
     private Image imageDot;
     private Image background;
+    BitmapFont font;
 
     private Vector2 previousTouch = Vector2.Zero;
 
@@ -41,16 +47,30 @@ public class Tile extends Group{
      * @param stage
      * @param img
      */
-    Tile(float x, float y,float _startMusicPosition, float _endMusicPosition, float tileWidth, float tileHeight, Stage stage, Texture img){
+    Tile(float x, float y,float _startMusicPosition, float _endMusicPosition, float tileWidth, float tileHeight,
+         Stage stage, Texture img, boolean isStart){
         super();
 
-//        x = 450;y = 800;
         background = new Image(img);
-        background.setSize(tileWidth, tileHeight);
+        background.setSize(tileWidth, tileHeight+4);
         setSize(tileWidth, tileHeight);
         setPosition(x, y);
         this.addActor(background);
 
+        if(isStart) {
+            font = new BitmapFont(Gdx.files.internal("carrier_command.xml"), Gdx.files.internal("carrier_command.png"), false);
+            Label.LabelStyle textStyle;
+            textStyle = new Label.LabelStyle();
+            textStyle.font = font;
+            textStyle.fontColor = Color.BLACK;
+            Label textPopupRestartPoint = new Label("", textStyle);
+            textPopupRestartPoint.setText("S\n\nT\n\nA\n\nR\n\nT");
+            textPopupRestartPoint.setAlignment(Align.center);
+            textPopupRestartPoint.setPosition(0, 0);
+            textPopupRestartPoint.setPosition(tileWidth / 2, tileHeight / 2);
+            textPopupRestartPoint.setFontScale(1.5f, 1.2f);
+            this.addActor(textPopupRestartPoint);
+        }
         stage.addActor(this);
 
         type = TileType.TILE_TAB;
@@ -156,6 +176,8 @@ public class Tile extends Group{
     }
 
     public void removeFromState(){
+        if(font != null) font.dispose();
         this.remove();
     }
+
 }

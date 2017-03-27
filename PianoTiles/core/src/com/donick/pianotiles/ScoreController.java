@@ -9,17 +9,31 @@ import com.badlogic.gdx.utils.Array;
  */
 public class ScoreController {
 
-    private float currentScore;
-    private float maxScore;
+    private int currentScore = 0;
+    private int highScore = 0;
     Preferences prefs;
+
 
     ScoreController(){
         prefs = Gdx.app.getPreferences("Score Preferences");
-        maxScore = prefs.getFloat("maxScore",0);
+        highScore = prefs.getInteger("highScore",0);
         currentScore = 0;
     }
 
     public void updateMaxScore(){
-
+        if(currentScore > highScore){
+            highScore = currentScore;
+            prefs.putInteger("highScore",highScore);
+            prefs.flush();
+        }
     }
+
+    public void increaseScore(){
+        currentScore++;
+    }
+
+    public float getCurrentScore(){
+        return currentScore;
+    }
+
 }

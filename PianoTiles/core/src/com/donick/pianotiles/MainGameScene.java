@@ -3,11 +3,16 @@ package com.donick.pianotiles;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
@@ -33,17 +38,26 @@ public class MainGameScene {
 
     float tileSpeed = 400;
 
+    //tmp value
+    float minTilePosition;
+
     Stage stage;
+    Group notesGroup;
 
     Random random = new Random();
 
     boolean isStartGame = false;
     boolean isDead = false;
-//    boolean isGod = false;
-    boolean isGod = true;
+    boolean isGod = false;
+//    boolean isGod = true;
+
+    ScoreController scoreController;
+    BitmapFont scoreFont;
+    Label scoreText;
 
 
     public MainGameScene(float _gameWidth, float _gameHeight, float _deviceWidth, float _deviceHeight ){
+
         gameWidth = _gameWidth;
         gameHeight = _gameHeight;
         deviceWidth = _deviceWidth;
@@ -60,15 +74,43 @@ public class MainGameScene {
         Image background = new Image(imgBG);
         stage.addActor(background);
 
+        notesGroup = new Group();
+        stage.addActor(notesGroup);
+
         tileWidth = 90;//gameWidth/numberOfTile;
         tileHeight = 160;//gameHeight/numberOfTile;
         tileWidth = gameWidth/numberOfTile;
         tileHeight = gameHeight/numberOfTile;
 
+        scoreController = new ScoreController();
+
+        createScoreText();
         addEventListener();
         createArrayOfPlayer();
         createNodeArray();
         createFirst4Tile();
+    }
+
+    void createScoreText(){
+
+        scoreFont = new BitmapFont(Gdx.files.internal("font_point.fnt"), Gdx.files.internal("font_point.png"), false);
+        Label.LabelStyle textStyle;
+        textStyle = new Label.LabelStyle();
+        textStyle.font = scoreFont;
+//        textStyle.fontColor = Color.BLACK;
+        scoreText = new Label("", textStyle);
+        scoreText.setText("0");
+        scoreText.setAlignment(Align.center);
+        scoreText.setPosition(0, 0);
+        scoreText.setPosition(gameWidth/2, gameHeight-70);
+        scoreText.setFontScale(2f, 2f);
+        stage.addActor(scoreText);
+
+
+    }
+
+    public void updateScoreText(){
+        scoreText.setText((int)scoreController.getCurrentScore() + "");
     }
 
     void createArrayOfPlayer(){
@@ -89,7 +131,7 @@ public class MainGameScene {
 
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
-                if(!isStartGame){
+                if(!isStartGame || isDead){
                     return;
                 }
                 for(Tile tile: arrayOfTiles){
@@ -101,6 +143,7 @@ public class MainGameScene {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
 
+                if(isDead) return;
                 if(!isStartGame){
                     Tile tile = arrayOfTiles.get(0);
                     tile.touchUp(x,y);
@@ -108,6 +151,8 @@ public class MainGameScene {
                         arrayOfTiles.removeValue(tile, true);
                         tile.removeFromState();
                         isStartGame = true;
+                        scoreController.increaseScore();
+                        updateScoreText();
                     }
                     return;
                 }
@@ -120,6 +165,8 @@ public class MainGameScene {
                         tile.removeFromState();
                         i--;
                         isWin = true;
+                        scoreController.increaseScore();
+                        updateScoreText();
                     }
 
                 }
@@ -130,6 +177,7 @@ public class MainGameScene {
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 
+                if(isDead) return false;
                 if(!isStartGame){
                     Tile tile = arrayOfTiles.get(0);
                     if (tile.touchDown(x, y)) playerSoundByNextFreePlayer(tile);
@@ -195,10 +243,10 @@ public class MainGameScene {
         NodeInfo nodeInfo = nodeArray.get(0);
         nodeArray.removeValue(nodeInfo,true);
         //tab tile
-        Tile tile = new Tile(x,y,nodeInfo.startTime,nodeInfo.endTime,tileWidth,tileHeight,stage,imgTile,isStart);
+        Tile tile = new Tile(x,y,nodeInfo.startTime,nodeInfo.endTime,tileWidth,tileHeight,notesGroup,imgTile,isStart);
 
         // hold tile
-//        Tile tile = new Tile(x,y,startPosition,2,tileWidth,tileHeight,stage,imgTile,imgDotTile,tileSpeed);
+//        Tile tile = new Tile(x,y,startPosition,2,tileWidth,tileHeight,notesGroup,imgTile,imgDotTile,tileSpeed);
         arrayOfTiles.add(tile);
         if(nodeArray.size <= 25)
             tileSpeed = 400*3f;
@@ -217,22 +265,27 @@ public class MainGameScene {
     }
 
     void checkDead(){
-        float firstTilePosition = gameHeight;
+        minTilePosition = gameHeight;
         Tile deleteTile = null;
         for(Tile tile : arrayOfTiles){
             float nextTilePosition = tile.getY();
-            if(nextTilePosition < firstTilePosition){
-                firstTilePosition = nextTilePosition;
+            if(nextTilePosition < minTilePosition){
+                minTilePosition = nextTilePosition;
                 deleteTile = tile;
             }
         }
-        if(firstTilePosition < 0){
+        if(minTilePosition < -100){
             doDead();
-            deleteTile.removeFromState();
-            arrayOfTiles.removeValue(deleteTile, true);
+            deleteTile.doDead();
+//            deleteTile.removeFromState();
+//            arrayOfTiles.removeValue(deleteTile, true);
 
         }
 
+    }
+
+    boolean checkCanMoveUp(){
+        return (minTilePosition <= -1);
     }
 
 
@@ -243,15 +296,18 @@ public class MainGameScene {
 //        }
 //        delta = 0.01f;
         checkDead();
-        if(!isDead && isStartGame) {
+        if(isStartGame) {
 //            System.out.println(tileSpeed);
             for (Tile tile : arrayOfTiles) {
-                tile.moveDown(tileSpeed,delta);
+                if(!isDead) tile.moveDown(tileSpeed, delta);
+                else if(checkCanMoveUp()) tile.moveUp(tileSpeed, delta);
                 tile.render();
             }
-            if(arrayOfPlayer != null)  for (int i = 0; i < arrayOfPlayer.size; i++) arrayOfPlayer.get(i).render();
-            checkAndSpawnNextTile();
+            if(!isDead) {
+                checkAndSpawnNextTile();
+            }
         }
+        if(arrayOfPlayer != null)  for (int i = 0; i < arrayOfPlayer.size; i++) arrayOfPlayer.get(i).render();
 
         stage.act(); //Perform ui logic
         stage.draw(); //Draw the ui

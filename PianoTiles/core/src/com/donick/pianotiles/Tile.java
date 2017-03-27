@@ -34,7 +34,9 @@ public class Tile extends Group{
     private float touchDuration;
     private Image imageDot;
     private Image background;
-    BitmapFont font;
+    private BitmapFont font;
+    private boolean isDead = false;
+    int countFlashForDeadMode = 0;
 
     private Vector2 previousTouch = Vector2.Zero;
 
@@ -44,11 +46,11 @@ public class Tile extends Group{
      * @param y
      * @param tileWidth
      * @param tileHeight
-     * @param stage
+     * @param notesGroup
      * @param img
      */
     Tile(float x, float y,float _startMusicPosition, float _endMusicPosition, float tileWidth, float tileHeight,
-         Stage stage, Texture img, boolean isStart){
+         Group notesGroup, Texture img, boolean isStart){
         super();
 
         background = new Image(img);
@@ -71,7 +73,8 @@ public class Tile extends Group{
             textPopupRestartPoint.setFontScale(1.5f, 1.2f);
             this.addActor(textPopupRestartPoint);
         }
-        stage.addActor(this);
+        notesGroup.addActor(this);
+//        this.setZIndex(2);
 
         type = TileType.TILE_TAB;
         startMusicPosition = _startMusicPosition;
@@ -86,12 +89,12 @@ public class Tile extends Group{
      * @param _endMusicPosition
      * @param tileWidth
      * @param tileHeight
-     * @param stage
+     * @param notesGroup
      * @param img
      * @param dot
      * @param speed
      */
-    Tile(float x, float y,float _startMusicPosition,float _endMusicPosition, float tileWidth, float tileHeight, Stage stage, Texture img, Texture dot, float speed){
+    Tile(float x, float y,float _startMusicPosition,float _endMusicPosition, float tileWidth, float tileHeight, Group notesGroup, Texture img, Texture dot, float speed){
         super();
         touchDuration = _endMusicPosition-_startMusicPosition;
         float availableHeigh = Math.max(speed * touchDuration,tileHeight);
@@ -107,7 +110,7 @@ public class Tile extends Group{
         addActor(imageDot);
 
         setPosition(x, y);
-        stage.addActor(this);
+        notesGroup.addActor(this);
         type = TileType.TILE_HOLD;
         startMusicPosition = _startMusicPosition;
         endMusicPosition = _endMusicPosition;
@@ -127,6 +130,11 @@ public class Tile extends Group{
         setY(getY() - translate);
     }
 
+    public void moveUp(float speed, float delta){
+        float translate = -delta*speed;
+        setY(getY() - translate);
+    }
+
     public void updatePositionDot(float y){
         if(type != TileType.TILE_HOLD) return;
 
@@ -135,6 +143,7 @@ public class Tile extends Group{
     }
 
     public void touchMove(float x, float y){
+        if(isDead) return;
         if(startTouch){
             if(!isInRegion(x,y)){
 //                isFail = true;
@@ -146,12 +155,16 @@ public class Tile extends Group{
         }
     }
     public void touchUp(float x, float y){
+        if(isDead) return;
+
         if(startTouch && !isFail){
             isFinish = true;
         }
     }
 
     public boolean touchDown(float x, float y){
+        if(isDead) return false;
+
         if(isInRegion(x,y)){
             startTouch = true;
             previousTouch.x = x;
@@ -161,7 +174,18 @@ public class Tile extends Group{
         return false;
     }
 
+    public void doDead(){
+        isDead = true;
+    }
+
     public void render(){
+        if(isDead) {
+            if(countFlashForDeadMode < 10) this.setVisible(false);
+            else this.setVisible(true);
+            if(countFlashForDeadMode > 20) countFlashForDeadMode = 0;
+            countFlashForDeadMode++;
+            return;
+        }
         if(startTouch){
             updatePositionDot(previousTouch.y);
         }

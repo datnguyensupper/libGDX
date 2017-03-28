@@ -52,6 +52,7 @@ public class MainGameScene {
 //    boolean isGod = true;
 
     ScoreController scoreController;
+    PopupController popupController;
     BitmapFont scoreFont;
     Label scoreText;
 
@@ -83,12 +84,22 @@ public class MainGameScene {
         tileHeight = gameHeight/numberOfTile;
 
         scoreController = new ScoreController();
+        popupController = new PopupController();
 
         createScoreText();
         addEventListener();
         createArrayOfPlayer();
         createNodeArray();
         createFirst4Tile();
+        createPopupGameOver();
+
+    }
+
+    void createPopupGameOver(){
+
+        Group gameOver = new Group();
+        stage.addActor(gameOver);
+        popupController.createPopupGameOver(gameOver);
     }
 
     void createScoreText(){
@@ -103,9 +114,8 @@ public class MainGameScene {
         scoreText.setAlignment(Align.center);
         scoreText.setPosition(0, 0);
         scoreText.setPosition(gameWidth/2, gameHeight-70);
-        scoreText.setFontScale(2f, 2f);
+        scoreText.setFontScale(2f, 2.5f);
         stage.addActor(scoreText);
-
 
     }
 
@@ -317,6 +327,7 @@ public class MainGameScene {
         imgTile.dispose();
         imgBG.dispose();
         imgDotTile.dispose();
+        popupController.dispose();
         for(int i = 0; i < arrayOfPlayer.size; i++){
             PlayingSoundAdvande player = arrayOfPlayer.get(i);
             player.dispose();

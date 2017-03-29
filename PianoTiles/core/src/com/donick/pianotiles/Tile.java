@@ -22,6 +22,7 @@ public class Tile extends Group{
 
     public enum TileType{
         TILE_TAB,
+        TILE_OBSTACLE,
         TILE_HOLD
     }
 
@@ -79,6 +80,32 @@ public class Tile extends Group{
         type = TileType.TILE_TAB;
         startMusicPosition = _startMusicPosition;
         endMusicPosition = _endMusicPosition;
+    }
+
+    /**
+     * create tab tile
+     * @param x
+     * @param y
+     * @param tileWidth
+     * @param tileHeight
+     * @param notesGroup
+     * @param img
+     */
+    Tile(float x, float y,float tileWidth, float tileHeight,
+         Group notesGroup, Texture img){
+        super();
+
+        background = new Image(img);
+        background.setSize(tileWidth, tileHeight+4);
+        setSize(tileWidth, tileHeight);
+        setPosition(x, y);
+        this.addActor(background);
+
+        notesGroup.addActor(this);
+//        this.setZIndex(2);
+
+        type = TileType.TILE_OBSTACLE;
+
     }
 
     /**
@@ -197,6 +224,10 @@ public class Tile extends Group{
 
     public boolean checkFail(){
         return isFail;
+    }
+
+    public boolean isObstacleTile(){
+        return type == TileType.TILE_OBSTACLE;
     }
 
     public void removeFromState(){

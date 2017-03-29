@@ -32,8 +32,12 @@ public class ScoreController {
         currentScore++;
     }
 
-    public float getCurrentScore(){
+    public int getCurrentScore(){
         return currentScore;
+    }
+
+    public void resetScore(){
+        currentScore = 0;
     }
 
 }

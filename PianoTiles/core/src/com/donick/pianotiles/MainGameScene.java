@@ -24,7 +24,7 @@ import java.util.Random;
 public class MainGameScene {
     Texture imgTile,imgDotTile,imgBG;
 
-    private Array<NodeInfo> nodeArray;
+    private Array<NodeInfo> nodeArray = null;
     private Array<Tile> arrayOfTiles;
     private  Array<PlayingSoundAdvande> arrayOfPlayer = null;
 
@@ -32,6 +32,7 @@ public class MainGameScene {
     float gameHeight;
     float deviceWidth;
     float deviceHeight;
+    float timeCount4ShowPopupGameOver = -1;
 
     float tileWidth, tileHeight;
     float numberOfTile = 4;
@@ -95,11 +96,28 @@ public class MainGameScene {
 
     }
 
+    void restart(){
+        isDead = false;
+        isStartGame = false;
+        popupController.gameOverPopup.setVisible(false);
+        scoreController.resetScore();
+        createNodeArray();
+        createFirst4Tile();
+        updateScoreText();
+    }
+
     void createPopupGameOver(){
 
-        Group gameOver = new Group();
-        stage.addActor(gameOver);
-        popupController.createPopupGameOver(gameOver);
+        Group gameOverPopup = new Group();
+        stage.addActor(gameOverPopup);
+        gameOverPopup.setVisible(false);
+        popupController.createPopupGameOver(gameOverPopup,gameWidth,gameHeight,new InputListener(){
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+                //restart game
+                restart();
+            }
+        },scoreFont,scoreController.getCurrentScore());
     }
 
     void createScoreText(){
@@ -133,6 +151,7 @@ public class MainGameScene {
     }
 
     void createNodeArray(){
+        if(nodeArray != null) nodeArray.clear();
         nodeArray = NodeController.createNodeArraySong1();
     }
 
@@ -180,9 +199,9 @@ public class MainGameScene {
                     }
 
                 }
-                if(isWin == false){
-                    doDead();
-                }
+//                if(isWin == false){
+//                    doDead();
+//                }
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
@@ -241,6 +260,12 @@ public class MainGameScene {
     }
 
     void createFirst4Tile(){
+        while(arrayOfTiles.size > 0){
+            Tile tile = arrayOfTiles.get(0);
+            arrayOfTiles.removeValue(tile, true);
+            tile.removeFromState();
+        }
+
         for(int i = 0; i < 4; i++){
             float randomX = random.nextInt(4) * tileWidth;
             createTitles(randomX,tileHeight*i, i==0);
@@ -271,6 +296,7 @@ public class MainGameScene {
     void doDead(){
         if(!isGod) {
             isDead = true;
+            timeCount4ShowPopupGameOver = 0;
         }
     }
 
@@ -305,12 +331,22 @@ public class MainGameScene {
 //            delta /= 60f;
 //        }
 //        delta = 0.01f;
+
         checkDead();
         if(isStartGame) {
+            if(timeCount4ShowPopupGameOver >= 2){
+                popupController.gameOverPopup.setVisible(true);
+                popupController.scoreTextGameOverPopup.setText(""+scoreController.getCurrentScore());
+                timeCount4ShowPopupGameOver = -1;
+            }
 //            System.out.println(tileSpeed);
             for (Tile tile : arrayOfTiles) {
                 if(!isDead) tile.moveDown(tileSpeed, delta);
-                else if(checkCanMoveUp()) tile.moveUp(tileSpeed, delta);
+                else if(checkCanMoveUp()) {
+                    tile.moveUp(tileSpeed, delta);
+                }else if(timeCount4ShowPopupGameOver >= 0){
+                    timeCount4ShowPopupGameOver+=delta;
+                }
                 tile.render();
             }
             if(!isDead) {

@@ -22,7 +22,7 @@ import java.util.Random;
  * Created by dinonguyen on 3/16/2017.
  */
 public class MainGameScene {
-    Texture imgTile,imgDotTile,imgBG;
+    Texture imgTile,imgDotTile,imgBG,imgTileObstacle;
 
     private Array<NodeInfo> nodeArray = null;
     private Array<Tile> arrayOfTiles;
@@ -66,6 +66,7 @@ public class MainGameScene {
         deviceHeight = _deviceHeight;
 
         imgTile = new Texture("tile.jpg");
+        imgTileObstacle = new Texture("badlogic.jpg");
         imgBG = new Texture("space-1.jpg");
         imgDotTile = new Texture("dot.png");
 
@@ -190,12 +191,16 @@ public class MainGameScene {
                     Tile tile = arrayOfTiles.get(i);
                     tile.touchUp(x,y);
                     if(tile.checkFinish()){
-                        arrayOfTiles.removeValue(tile, true);
-                        tile.removeFromState();
-                        i--;
-                        isWin = true;
-                        scoreController.increaseScore();
-                        updateScoreText();
+                        if(tile.isObstacleTile()){
+                            doDead();
+                        }else {
+                            arrayOfTiles.removeValue(tile, true);
+                            tile.removeFromState();
+                            i--;
+                            isWin = true;
+                            scoreController.increaseScore();
+                            updateScoreText();
+                        }
                     }
 
                 }
@@ -254,8 +259,7 @@ public class MainGameScene {
 
         if(lastTilePosition <= gameHeight){
             // create tiles
-            float randomX = random.nextInt(4) * tileWidth;
-            createTitles(randomX,lastTilePosition,false);
+            createTitles(lastTilePosition,false);
         }
     }
 
@@ -267,22 +271,30 @@ public class MainGameScene {
         }
 
         for(int i = 0; i < 4; i++){
-            float randomX = random.nextInt(4) * tileWidth;
-            createTitles(randomX,tileHeight*i, i==0);
+            createTitles(tileHeight*i, i==0);
         }
     }
 
-    void createTitles(float x, float y, boolean isStart){
+    void createTitles(float y, boolean isStart){
         if(nodeArray.size == 0) return ;
+
+        int numberOfTileOneRow = 4;
+        int xID = random.nextInt(numberOfTileOneRow);
+        float x = xID * tileWidth;
 
         NodeInfo nodeInfo = nodeArray.get(0);
         nodeArray.removeValue(nodeInfo,true);
         //tab tile
         Tile tile = new Tile(x,y,nodeInfo.startTime,nodeInfo.endTime,tileWidth,tileHeight,notesGroup,imgTile,isStart);
-
+        arrayOfTiles.add(tile);
+        for(int i = 0; i <numberOfTileOneRow;i++){
+            if(i != xID){
+                Tile tileObstacle = new Tile(i*tileWidth,y,tileWidth,tileHeight,notesGroup,imgTileObstacle);
+                arrayOfTiles.add(tileObstacle);
+            }
+        }
         // hold tile
 //        Tile tile = new Tile(x,y,startPosition,2,tileWidth,tileHeight,notesGroup,imgTile,imgDotTile,tileSpeed);
-        arrayOfTiles.add(tile);
         if(nodeArray.size <= 25)
             tileSpeed = 400*3f;
         else if(nodeArray.size <= 50)
@@ -311,10 +323,13 @@ public class MainGameScene {
             }
         }
         if(minTilePosition < -100){
-            doDead();
-            deleteTile.doDead();
-//            deleteTile.removeFromState();
-//            arrayOfTiles.removeValue(deleteTile, true);
+            if(deleteTile.isObstacleTile()){
+                deleteTile.doDead();
+                deleteTile.removeFromState();
+                arrayOfTiles.removeValue(deleteTile, true);
+            }else{
+//                doDead();
+            }
 
         }
 
@@ -361,6 +376,7 @@ public class MainGameScene {
 
     public void dispose () {
         imgTile.dispose();
+        imgTileObstacle.dispose();
         imgBG.dispose();
         imgDotTile.dispose();
         popupController.dispose();

@@ -192,6 +192,7 @@ public class MainGameScene {
                     tile.touchUp(x,y);
                     if(tile.checkFinish()){
                         if(tile.isObstacleTile()){
+                            tile.doDead();
                             doDead();
                         }else {
                             arrayOfTiles.removeValue(tile, true);
@@ -276,7 +277,11 @@ public class MainGameScene {
     }
 
     void createTitles(float y, boolean isStart){
-        if(nodeArray.size == 0) return ;
+        if(isDead) return;
+        if(nodeArray.size == 0) {
+            doDead();
+            return;
+        }
 
         int numberOfTileOneRow = 4;
         int xID = random.nextInt(numberOfTileOneRow);
@@ -289,7 +294,8 @@ public class MainGameScene {
         arrayOfTiles.add(tile);
         for(int i = 0; i <numberOfTileOneRow;i++){
             if(i != xID){
-                Tile tileObstacle = new Tile(i*tileWidth,y,tileWidth,tileHeight,notesGroup,imgTileObstacle);
+//                Tile tileObstacle = new Tile(i*tileWidth,y,tileWidth,tileHeight,notesGroup,imgTileObstacle);
+                Tile tileObstacle = new Tile(i*tileWidth,y,tileWidth,tileHeight,notesGroup,imgTile);
                 arrayOfTiles.add(tileObstacle);
             }
         }
@@ -324,11 +330,11 @@ public class MainGameScene {
         }
         if(minTilePosition < -100){
             if(deleteTile.isObstacleTile()){
-                deleteTile.doDead();
                 deleteTile.removeFromState();
                 arrayOfTiles.removeValue(deleteTile, true);
             }else{
-//                doDead();
+                deleteTile.doDead();
+                doDead();
             }
 
         }
@@ -359,10 +365,11 @@ public class MainGameScene {
                 if(!isDead) tile.moveDown(tileSpeed, delta);
                 else if(checkCanMoveUp()) {
                     tile.moveUp(tileSpeed, delta);
-                }else if(timeCount4ShowPopupGameOver >= 0){
-                    timeCount4ShowPopupGameOver+=delta;
                 }
                 tile.render();
+            }
+            if(isDead && !checkCanMoveUp() && timeCount4ShowPopupGameOver >= 0){
+                timeCount4ShowPopupGameOver+=delta;
             }
             if(!isDead) {
                 checkAndSpawnNextTile();

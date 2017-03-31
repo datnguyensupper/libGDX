@@ -54,8 +54,10 @@ public class Tile extends Group{
          Group notesGroup, Texture img, boolean isStart){
         super();
 
+        int extraSize = 8;
         background = new Image(img);
-        background.setSize(tileWidth, tileHeight+4);
+        background.setSize(tileWidth, tileHeight+extraSize);
+        background.setY(-extraSize/2);
         setSize(tileWidth, tileHeight);
         setPosition(x, y);
         this.addActor(background);
@@ -95,8 +97,12 @@ public class Tile extends Group{
          Group notesGroup, Texture img){
         super();
 
+        int extraSize = 8;
         background = new Image(img);
-        background.setSize(tileWidth, tileHeight+4);
+        background.setVisible(false);
+        background.setColor(Color.RED);
+        background.setSize(tileWidth, tileHeight+extraSize);
+        background.setY(-extraSize/2);
         setSize(tileWidth, tileHeight);
         setPosition(x, y);
         this.addActor(background);
@@ -207,8 +213,8 @@ public class Tile extends Group{
 
     public void render(){
         if(isDead) {
-            if(countFlashForDeadMode < 10) this.setVisible(false);
-            else this.setVisible(true);
+            if(countFlashForDeadMode < 10) background.setVisible(false);
+            else background.setVisible(true);
             if(countFlashForDeadMode > 20) countFlashForDeadMode = 0;
             countFlashForDeadMode++;
             return;

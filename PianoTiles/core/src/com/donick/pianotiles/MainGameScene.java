@@ -57,6 +57,8 @@ public class MainGameScene {
     BitmapFont scoreFont;
     Label scoreText;
 
+    int numberOfNodePlayed = 0;
+
 
     public MainGameScene(float _gameWidth, float _gameHeight, float _deviceWidth, float _deviceHeight ){
 
@@ -105,6 +107,7 @@ public class MainGameScene {
         createNodeArray();
         createFirst4Tile();
         updateScoreText();
+        numberOfNodePlayed = 0;
     }
 
     void createPopupGameOver(){
@@ -302,14 +305,26 @@ public class MainGameScene {
         // hold tile
 //        Tile tile = new Tile(x,y,startPosition,2,tileWidth,tileHeight,notesGroup,imgTile,imgDotTile,tileSpeed);
         if(!isGod) {
-            if (nodeArray.size <= 25)
+//            if (nodeArray.size <= 25)
+//                tileSpeed = 400 * 3f;
+//            else if (nodeArray.size <= 50)
+//                tileSpeed = 400 * 2.5f;
+//            else if (nodeArray.size <= 100)
+//                tileSpeed = 400 * 2f;
+//            else if (nodeArray.size <= 125)
+//                tileSpeed = 400 * 1.5f;
+
+
+            if (scoreController.getCurrentScore() >= 125)
                 tileSpeed = 400 * 3f;
-            else if (nodeArray.size <= 50)
+            else if (scoreController.getCurrentScore() >= 100)
                 tileSpeed = 400 * 2.5f;
-            else if (nodeArray.size <= 100)
+            else if (scoreController.getCurrentScore() >= 50)
                 tileSpeed = 400 * 2f;
-            else if (nodeArray.size <= 125)
+            else if (scoreController.getCurrentScore() >= 25)
                 tileSpeed = 400 * 1.5f;
+
+
         }
     }
 

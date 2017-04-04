@@ -7,7 +7,7 @@ package com.donick.pianotiles;
 public class NodeInfo {
 
     public enum NodeType{
-        C4,D4,E4,F4,G4,A4,B4,C5,D5,E5,F5,G5
+        Empty,C4,D4,E4,F4,G4,A4,B4,C5,D5,E5,F5,G5,A6,A3,B3
     }
 
     float startTime;
@@ -44,6 +44,14 @@ public class NodeInfo {
                 startTime = 17f;endTime=17.5f;break;
             case G5:
                 startTime = 19.5f;endTime=20f;break;
+            case A6:
+                startTime = 21f;endTime=21.5f;break;
+            case A3:
+                startTime = 22f;endTime=23f;break;
+            case B3:
+                startTime = 25f;endTime=26f;break;
+            default:
+                startTime = endTime = 0;
         }
     }
 

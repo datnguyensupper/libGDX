@@ -82,6 +82,10 @@ public class Tile extends Group{
         type = TileType.TILE_TAB;
         startMusicPosition = _startMusicPosition;
         endMusicPosition = _endMusicPosition;
+        if(startMusicPosition == endMusicPosition) {
+            background.setVisible(false);
+            type = TileType.TILE_OBSTACLE;
+        }
     }
 
     /**

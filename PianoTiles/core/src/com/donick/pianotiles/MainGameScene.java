@@ -146,7 +146,7 @@ public class MainGameScene {
         int numberOfPlayer = 4;
         arrayOfPlayer = new Array<PlayingSoundAdvande>();
         for(int i = 0; i < numberOfPlayer; i++){
-            PlayingSoundAdvande player = new PlayingSoundAdvande(Gdx.files.internal("music/Level1_InspirationalPianoMusic.mp3"));
+            PlayingSoundAdvande player = new PlayingSoundAdvande(Gdx.files.internal("music/PianoNote.mp3"));
             arrayOfPlayer.add(player);
         }
     }
@@ -301,14 +301,16 @@ public class MainGameScene {
         }
         // hold tile
 //        Tile tile = new Tile(x,y,startPosition,2,tileWidth,tileHeight,notesGroup,imgTile,imgDotTile,tileSpeed);
-        if(nodeArray.size <= 25)
-            tileSpeed = 400*3f;
-        else if(nodeArray.size <= 50)
-            tileSpeed = 400*2.5f;
-        else if(nodeArray.size <= 100)
-            tileSpeed = 400*2f;
-        else if(nodeArray.size <= 125)
-            tileSpeed = 400*1.5f;
+        if(!isGod) {
+            if (nodeArray.size <= 25)
+                tileSpeed = 400 * 3f;
+            else if (nodeArray.size <= 50)
+                tileSpeed = 400 * 2.5f;
+            else if (nodeArray.size <= 100)
+                tileSpeed = 400 * 2f;
+            else if (nodeArray.size <= 125)
+                tileSpeed = 400 * 1.5f;
+        }
     }
 
     void doDead(){

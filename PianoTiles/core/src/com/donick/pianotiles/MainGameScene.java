@@ -37,7 +37,7 @@ public class MainGameScene {
     float tileWidth, tileHeight;
     float numberOfTile = 4;
 
-    float tileSpeed = 400;
+    float tileSpeed = 700;
 
     //tmp value
     float minTilePosition;

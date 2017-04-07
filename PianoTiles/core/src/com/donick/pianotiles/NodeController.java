@@ -8,7 +8,8 @@ import com.badlogic.gdx.utils.Array;
 public class NodeController {
     static Array<NodeInfo> createNodeArraySong1(){
         Array<NodeInfo> result = new Array<NodeInfo>(150);
-      // bar 1
+
+        // bar 1
         result.add(new NodeInfo(NodeInfo.NodeType.C5));
         result.add(new NodeInfo(NodeInfo.NodeType.E5));
         result.add(new NodeInfo(NodeInfo.NodeType.F5));
@@ -45,6 +46,7 @@ public class NodeController {
         result.add(new NodeInfo(NodeInfo.NodeType.G5));
         result.add(new NodeInfo(NodeInfo.NodeType.E5));
 
+        result.add(new NodeInfo(NodeInfo.NodeType.Empty));
         result.add(new NodeInfo(NodeInfo.NodeType.Empty));
 
         result.add(new NodeInfo(NodeInfo.NodeType.E5));
@@ -131,7 +133,7 @@ public class NodeController {
         result.add(new NodeInfo(NodeInfo.NodeType.C5));
         result.add(new NodeInfo(NodeInfo.NodeType.G4));
 
-        result.add(new NodeInfo(NodeInfo.NodeType.A3));
+//        result.add(new NodeInfo(NodeInfo.NodeType.A3));
         result.add(new NodeInfo(NodeInfo.NodeType.C5));
         result.add(new NodeInfo(NodeInfo.NodeType.C5));
         result.add(new NodeInfo(NodeInfo.NodeType.B4));
@@ -202,7 +204,7 @@ public class NodeController {
         result.add(new NodeInfo(NodeInfo.NodeType.B4));
         result.add(new NodeInfo(NodeInfo.NodeType.C5));
         result.add(new NodeInfo(NodeInfo.NodeType.G4));
-        result.add(new NodeInfo(NodeInfo.NodeType.A3));
+//        result.add(new NodeInfo(NodeInfo.NodeType.A3));
 
         result.add(new NodeInfo(NodeInfo.NodeType.C5));
         result.add(new NodeInfo(NodeInfo.NodeType.C5));

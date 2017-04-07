@@ -37,7 +37,8 @@ public class MainGameScene {
     float tileWidth, tileHeight;
     float numberOfTile = 4;
 
-    float tileSpeed = 700;
+    float tileSpeedBase = 700;
+    float tileSpeed = tileSpeedBase;
 
     //tmp value
     float minTilePosition;
@@ -108,6 +109,7 @@ public class MainGameScene {
         createFirst4Tile();
         updateScoreText();
         numberOfNodePlayed = 0;
+        tileSpeed = tileSpeedBase;
     }
 
     void createPopupGameOver(){
@@ -146,7 +148,7 @@ public class MainGameScene {
     }
 
     void createArrayOfPlayer(){
-        int numberOfPlayer = 4;
+        int numberOfPlayer = 6;
         arrayOfPlayer = new Array<PlayingSoundAdvande>();
         for(int i = 0; i < numberOfPlayer; i++){
             PlayingSoundAdvande player = new PlayingSoundAdvande(Gdx.files.internal("music/PianoNote.mp3"));
@@ -239,7 +241,7 @@ public class MainGameScene {
     void playerSoundByNextFreePlayer(Tile tile){
         PlayingSoundAdvande chosenPlayer = null;
         if(arrayOfPlayer != null) {
-            for (int i = 0; i < arrayOfPlayer.size; i++) {
+            for (int i = 0; i < arrayOfPlayer.size-1; i++) {
                 PlayingSoundAdvande player = arrayOfPlayer.get(i);
                 if (!player.isPlaying()) {
                     chosenPlayer = player;
@@ -247,9 +249,12 @@ public class MainGameScene {
                 }
             }
         }
+        if(chosenPlayer == null) chosenPlayer = arrayOfPlayer.get(arrayOfPlayer.size-1);
         if(chosenPlayer != null){
             chosenPlayer.play(tile.startMusicPosition,tile.endMusicPosition);
         }
+
+
     }
 
     void checkAndSpawnNextTile(){
@@ -305,25 +310,19 @@ public class MainGameScene {
         // hold tile
 //        Tile tile = new Tile(x,y,startPosition,2,tileWidth,tileHeight,notesGroup,imgTile,imgDotTile,tileSpeed);
         if(!isGod) {
-//            if (nodeArray.size <= 25)
-//                tileSpeed = 400 * 3f;
-//            else if (nodeArray.size <= 50)
-//                tileSpeed = 400 * 2.5f;
-//            else if (nodeArray.size <= 100)
-//                tileSpeed = 400 * 2f;
-//            else if (nodeArray.size <= 125)
-//                tileSpeed = 400 * 1.5f;
-
 
             if (scoreController.getCurrentScore() >= 125)
-                tileSpeed = 400 * 3f;
+                tileSpeed = tileSpeedBase * 1.75f;
             else if (scoreController.getCurrentScore() >= 100)
-                tileSpeed = 400 * 2.5f;
+                tileSpeed = tileSpeedBase * 1.5f;
             else if (scoreController.getCurrentScore() >= 50)
-                tileSpeed = 400 * 2f;
+                tileSpeed = tileSpeedBase * 1.25f;
             else if (scoreController.getCurrentScore() >= 25)
-                tileSpeed = 400 * 1.5f;
+                tileSpeed = tileSpeedBase * 1.125f;
+            else
+                tileSpeed = tileSpeedBase;
 
+//            System.out.println("tileSpeed " + tileSpeed);
 
         }
     }

@@ -54,7 +54,7 @@ public class Tile extends Group{
          Group notesGroup, Texture img, boolean isStart){
         super();
 
-        int extraSize = 8;
+        int extraSize = -10;
         background = new Image(img);
         background.setSize(tileWidth, tileHeight+extraSize);
         background.setY(-extraSize/2);

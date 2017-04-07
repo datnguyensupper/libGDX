@@ -12,6 +12,7 @@ public class PlayingSoundAdvande {
 
     float start;
     float end;
+    boolean isPlaying = false;
 
     PlayingSoundAdvande(FileHandle file){
         player = Gdx.audio.newMusic(file);
@@ -20,6 +21,7 @@ public class PlayingSoundAdvande {
     }
 
     void play(float _start, float _end){
+        isPlaying = true;
         start = _start;
         end = _end;
         player.setPosition(_start);
@@ -27,12 +29,13 @@ public class PlayingSoundAdvande {
     }
 
     boolean isPlaying(){
-        return player.isPlaying();
+        return isPlaying;
     }
 
     void render(){
-        if(player.isPlaying()){
+        if(isPlaying){
             if(player.getPosition() >= end){
+                isPlaying = false;
                 player.pause();
             }
         }

@@ -42,6 +42,37 @@ public class Tile extends Group{
     private Vector2 previousTouch = Vector2.Zero;
 
     /**
+     *
+     * @param x
+     * @param y
+     * @param _startMusicPosition
+     * @param _endMusicPosition
+     * @param tileWidth
+     * @param tileHeight
+     * @param notesGroup
+     * @param img
+     * @param dot
+     * @param speed
+     * @param isStart
+     */
+    Tile(float x, float y,float _startMusicPosition,float _endMusicPosition, float tileWidth, float tileHeight, Group notesGroup, Texture img, Texture dot, float speed,boolean isStart){
+        if(_startMusicPosition == _endMusicPosition){
+            //blank node
+            updateTile( x, y, tileWidth, tileHeight, notesGroup);
+        }else if(_endMusicPosition - _startMusicPosition < 1){
+            // short node
+            updateTile( x, y,_startMusicPosition, _endMusicPosition, tileWidth, tileHeight, notesGroup, img, isStart);
+        }else if(speed*(_endMusicPosition - _startMusicPosition) < tileHeight) {
+            // short node
+            updateTile(x, y, _startMusicPosition, _endMusicPosition, tileWidth, tileHeight, notesGroup, img, isStart);
+        }else{
+            // long node
+            updateTile( x, y,_startMusicPosition,_endMusicPosition, tileWidth, tileHeight, notesGroup, img, dot, speed);
+        }
+    }
+
+
+    /**
      * create tab tile
      * @param x
      * @param y
@@ -50,9 +81,8 @@ public class Tile extends Group{
      * @param notesGroup
      * @param img
      */
-    Tile(float x, float y,float _startMusicPosition, float _endMusicPosition, float tileWidth, float tileHeight,
-         Group notesGroup, Texture img, boolean isStart){
-        super();
+    private void updateTile(float x, float y,float _startMusicPosition, float _endMusicPosition, float tileWidth, float tileHeight,
+         Group notesGroup, Texture img,boolean isStart ){
 
         int extraSize = -10;
         background = new Image(img);
@@ -82,10 +112,6 @@ public class Tile extends Group{
         type = TileType.TILE_TAB;
         startMusicPosition = _startMusicPosition;
         endMusicPosition = _endMusicPosition;
-        if(startMusicPosition == endMusicPosition) {
-            background.setVisible(false);
-            type = TileType.TILE_OBSTACLE;
-        }
     }
 
     /**
@@ -95,21 +121,11 @@ public class Tile extends Group{
      * @param tileWidth
      * @param tileHeight
      * @param notesGroup
-     * @param img
      */
-    Tile(float x, float y,float tileWidth, float tileHeight,
-         Group notesGroup, Texture img){
-        super();
+    private void updateTile(float x, float y,float tileWidth, float tileHeight, Group notesGroup){
 
-        int extraSize = 8;
-        background = new Image(img);
-        background.setVisible(false);
-        background.setColor(Color.RED);
-        background.setSize(tileWidth, tileHeight+extraSize);
-        background.setY(-extraSize/2);
         setSize(tileWidth, tileHeight);
         setPosition(x, y);
-        this.addActor(background);
 
         notesGroup.addActor(this);
 //        this.setZIndex(2);
@@ -131,8 +147,8 @@ public class Tile extends Group{
      * @param dot
      * @param speed
      */
-    Tile(float x, float y,float _startMusicPosition,float _endMusicPosition, float tileWidth, float tileHeight, Group notesGroup, Texture img, Texture dot, float speed){
-        super();
+    private void updateTile(float x, float y,float _startMusicPosition,float _endMusicPosition, float tileWidth, float tileHeight, Group notesGroup, Texture img, Texture dot, float speed){
+
         touchDuration = _endMusicPosition-_startMusicPosition;
         float availableHeigh = Math.max(speed * touchDuration,tileHeight);
 
@@ -143,7 +159,7 @@ public class Tile extends Group{
         this.addActor(background);
 
         imageDot = new Image(dot);
-        imageDot.setPosition(tileWidth/2, 10);
+        imageDot.setPosition(tileWidth/2-imageDot.getWidth()/2, 10);
         addActor(imageDot);
 
         setPosition(x, y);
@@ -176,7 +192,9 @@ public class Tile extends Group{
         if(type != TileType.TILE_HOLD) return;
 
         float yPosition = y - getY();
-        imageDot.setY(yPosition);
+        if(imageDot != null) {
+            imageDot.setY(yPosition-imageDot.getHeight()/2);
+        }
     }
 
     public void touchMove(float x, float y){
@@ -217,8 +235,10 @@ public class Tile extends Group{
 
     public void render(){
         if(isDead) {
-            if(countFlashForDeadMode < 10) background.setVisible(false);
-            else background.setVisible(true);
+            if(background != null) {
+                if (countFlashForDeadMode < 10) background.setVisible(false);
+                else background.setVisible(true);
+            }
             if(countFlashForDeadMode > 20) countFlashForDeadMode = 0;
             countFlashForDeadMode++;
             return;

@@ -6,8 +6,11 @@ package com.donick.pianotiles;
  */
 public class NodeInfo {
 
-    public enum NodeType{
+    public enum NodeHigh{
         Empty,C4,D4,E4,F4,G4,A4,B4,C5,D5,E5,F5,G5,A6,A3,B3
+    }
+    public enum NodeType{
+        type05,type10,type15,type20,type25,type30
     }
 
     float startTime;
@@ -18,41 +21,55 @@ public class NodeInfo {
         endTime = _endTime;
     }
 
-    NodeInfo(NodeType nodeType){
-        switch (nodeType){
+    NodeInfo(NodeHigh nodeHigh, NodeType nodeType ){
+        switch (nodeHigh){
             case C4:
-                startTime = 0;endTime=0.5f;break;
+                startTime = 0;break;
             case D4:
-                startTime = 0.5f;endTime=1f;break;
+                startTime = 0.5f;break;
             case E4:
-                startTime = 1.5f;endTime=2f;break;
+                startTime = 1.5f;break;
             case F4:
-                startTime = 3f;endTime=3.5f;break;
+                startTime = 3f;break;
             case G4:
-                startTime = 4.5f;endTime=5f;break;
+                startTime = 4.5f;break;
             case A4:
-                startTime = 6f;endTime=6.5f;break;
+                startTime = 6f;break;
             case B4:
-                startTime = 7.5f;endTime=8f;break;
+                startTime = 7.5f;break;
             case C5:
-                startTime = 9.5f;endTime=10f;break;
+                startTime = 9.5f;break;
             case D5:
-                startTime = 12.5f;endTime=13f;break;
+                startTime = 12.5f;break;
             case E5:
-                startTime = 14.5f;endTime=15f;break;
+                startTime = 14.5f;break;
             case F5:
-                startTime = 17f;endTime=17.5f;break;
+                startTime = 17f;break;
             case G5:
-                startTime = 19.5f;endTime=20f;break;
+                startTime = 19.5f;break;
             case A6:
-                startTime = 21f;endTime=21.5f;break;
+                startTime = 21f;break;
             case A3:
-                startTime = 22f;endTime=23f;break;
+                startTime = 22f;break;
             case B3:
-                startTime = 25f;endTime=26f;break;
+                startTime = 25f;break;
             default:
                 startTime = endTime = 0;
+                return;
         }
+        endTime = startTime + getNodeTypeDuration(nodeType);
+    }
+
+    float getNodeTypeDuration(NodeType nodeType){
+        switch (nodeType){
+            case type05: return 0.5f;
+            case type10: return 1.0f;
+            case type15: return 1.5f;
+            case type20: return 2.0f;
+            case type25: return 2.5f;
+            case type30: return 3.0f;
+        }
+        return 0;
     }
 
 }

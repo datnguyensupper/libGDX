@@ -50,8 +50,8 @@ public class MainGameScene {
 
     boolean isStartGame = false;
     boolean isDead = false;
-    boolean isGod = false;
-//    boolean isGod = true;
+//    boolean isGod = false;
+    boolean isGod = true;
 
     ScoreController scoreController;
     PopupController popupController;
@@ -298,12 +298,13 @@ public class MainGameScene {
         NodeInfo nodeInfo = nodeArray.get(0);
         nodeArray.removeValue(nodeInfo,true);
         //tab tile
-        Tile tile = new Tile(x,y,nodeInfo.startTime,nodeInfo.endTime,tileWidth,tileHeight,notesGroup,imgTile,isStart);
+//        float x, float y,float _startMusicPosition,float _endMusicPosition, float tileWidth, float tileHeight, Group notesGroup, Texture img, Texture dot, float speed,boolean isStart
+        Tile tile = new Tile(x,y,nodeInfo.startTime,nodeInfo.endTime,tileWidth,tileHeight,notesGroup,imgTile,imgDotTile,tileSpeed,isStart);
         arrayOfTiles.add(tile);
         for(int i = 0; i <numberOfTileOneRow;i++){
             if(i != xID){
 //                Tile tileObstacle = new Tile(i*tileWidth,y,tileWidth,tileHeight,notesGroup,imgTileObstacle);
-                Tile tileObstacle = new Tile(i*tileWidth,y,tileWidth,tileHeight,notesGroup,imgTile);
+                Tile tileObstacle = new Tile(i*tileWidth,y,0,0,tileWidth,tileHeight,notesGroup,imgTile,null,tileSpeed,false);
                 arrayOfTiles.add(tileObstacle);
             }
         }

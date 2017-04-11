@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
+
 import java.util.Random;
 
 /**
@@ -161,6 +162,20 @@ public class MainGameScene {
         nodeArray = NodeController.createNodeArraySong1();
     }
 
+    boolean checkFinishAndRemoveTile(Tile tile){
+        boolean isFinish = tile.checkFinish();
+
+        if(isFinish){
+            if(!tile.isObstacleTile()){
+//                removeTile(tile);
+                scoreController.increaseScore();
+                updateScoreText();
+            }
+        }
+
+        return isFinish;
+    }
+
     void addEventListener(){
         stage.addListener(new InputListener(){
 
@@ -170,7 +185,20 @@ public class MainGameScene {
                     return;
                 }
                 for(Tile tile: arrayOfTiles){
-                    tile.touchMove(x,y);
+                    tile.touchMove(x,y, pointer);
+                }
+
+                for(int i = 0; i < arrayOfTiles.size; i++){
+                    Tile tile = arrayOfTiles.get(i);
+                    if(checkFinishAndRemoveTile(tile)){
+                        if(tile.isObstacleTile()){
+                            tile.doDead();
+                            doDead();
+                        }else {
+                            i--;
+
+                        }
+                    }
                 }
 
             }
@@ -181,50 +209,41 @@ public class MainGameScene {
                 if(isDead) return;
                 if(!isStartGame){
                     Tile tile = arrayOfTiles.get(0);
-                    tile.touchUp(x,y);
-                    if(tile.checkFinish()){
-                        arrayOfTiles.removeValue(tile, true);
-                        tile.removeFromState();
+                    tile.touchUp(x,y, pointer);
+
+                    if(checkFinishAndRemoveTile(tile))
                         isStartGame = true;
-                        scoreController.increaseScore();
-                        updateScoreText();
-                    }
+
                     return;
                 }
-                boolean isWin = false;
+
                 for(int i = 0; i < arrayOfTiles.size; i++){
                     Tile tile = arrayOfTiles.get(i);
-                    tile.touchUp(x,y);
-                    if(tile.checkFinish()){
+                    tile.touchUp(x,y, pointer);
+                    if(checkFinishAndRemoveTile(tile)){
                         if(tile.isObstacleTile()){
                             tile.doDead();
                             doDead();
                         }else {
-                            arrayOfTiles.removeValue(tile, true);
-                            tile.removeFromState();
                             i--;
-                            isWin = true;
-                            scoreController.increaseScore();
-                            updateScoreText();
+
                         }
                     }
-
                 }
-//                if(isWin == false){
-//                    doDead();
-//                }
+
             }
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
 
+
                 if(isDead) return false;
                 if(!isStartGame){
                     Tile tile = arrayOfTiles.get(0);
-                    if (tile.touchDown(x, y)) playerSoundByNextFreePlayer(tile);
+                    if (tile.touchDown(x, y, pointer)) playerSoundByNextFreePlayer(tile);
                 }else {
                     Tile chosenTile = null;
                     for (Tile tile : arrayOfTiles) {
-                        if (tile.touchDown(x, y)) chosenTile = tile;
+                        if (tile.touchDown(x, y, pointer)) chosenTile = tile;
                     }
                     if (chosenTile != null) {
                         playerSoundByNextFreePlayer(chosenTile);
@@ -258,18 +277,23 @@ public class MainGameScene {
     }
 
     void checkAndSpawnNextTile(){
-        float lastTilePosition = gameHeight;
+
+        float lastTilePosition = getLastTilePosition();
+        if(lastTilePosition <= gameHeight){
+            // create tiles
+            createTitles(lastTilePosition,false);
+        }
+    }
+
+    float getLastTilePosition(){
+        float lastTilePosition = 0;
         for(Tile tile : arrayOfTiles){
             float nextTilePosition = tile.getY() + tile.getHeight();
             if(nextTilePosition > lastTilePosition){
                 lastTilePosition = nextTilePosition;
             }
         }
-
-        if(lastTilePosition <= gameHeight){
-            // create tiles
-            createTitles(lastTilePosition,false);
-        }
+        return lastTilePosition;
     }
 
     void createFirst4Tile(){
@@ -280,7 +304,8 @@ public class MainGameScene {
         }
 
         for(int i = 0; i < 4; i++){
-            createTitles(tileHeight*i, i==0);
+            float lastTilePosition = getLastTilePosition();
+            createTitles(lastTilePosition, i==0);
         }
     }
 
@@ -335,11 +360,23 @@ public class MainGameScene {
         }
     }
 
+    void removeTile(Tile tile){
+        arrayOfTiles.removeValue(tile, true);
+        tile.removeFromState();
+    }
+
     void checkDead(){
         minTilePosition = gameHeight;
         Tile deleteTile = null;
-        for(Tile tile : arrayOfTiles){
-            float nextTilePosition = tile.getY();
+        for(int i = 0; i < arrayOfTiles.size; i++){
+            Tile tile = arrayOfTiles.get(i);
+            if(tile.isDead()){
+                if(tile.getY() + tile.getHeight() < 0){
+                    removeTile(tile);
+                }
+                continue;
+            }
+            float nextTilePosition = tile.getRealYPosition();
             if(nextTilePosition < minTilePosition){
                 minTilePosition = nextTilePosition;
                 deleteTile = tile;

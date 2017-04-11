@@ -38,6 +38,7 @@ public class Tile extends Group{
     private BitmapFont font;
     private boolean isDead = false;
     int countFlashForDeadMode = 0;
+    int pointer = -1;
 
     private Vector2 previousTouch = Vector2.Zero;
 
@@ -154,8 +155,9 @@ public class Tile extends Group{
 
         setSize(tileWidth, availableHeigh);
 
+        int extraSize = -10;
         background = new Image(img);
-        background.setSize(tileWidth, availableHeigh);
+        background.setSize(tileWidth, availableHeigh+extraSize);
         this.addActor(background);
 
         imageDot = new Image(dot);
@@ -169,13 +171,18 @@ public class Tile extends Group{
         endMusicPosition = _endMusicPosition;
     }
 
-
     private boolean isInRegion(float x, float y){
         float minX = getX();
         float maxX = getX() + getWidth();
         float minY = getY();
         float maxY = getY() + getHeight();
         return (x < maxX && x > minX && y < maxY && y > minY );
+    }
+
+    private boolean isInXRegion(float x){
+        float minX = getX();
+        float maxX = getX() + getWidth();
+        return (x < maxX && x > minX);
     }
 
     public void moveDown(float speed, float delta){
@@ -191,15 +198,16 @@ public class Tile extends Group{
     public void updatePositionDot(float y){
         if(type != TileType.TILE_HOLD) return;
 
-        float yPosition = y - getY();
+        float yPosition = Math.max(y - getY(),imageDot.getHeight()/2 );
+        yPosition = Math.min(yPosition,getHeight()-imageDot.getHeight()/2 );
         if(imageDot != null) {
             imageDot.setY(yPosition-imageDot.getHeight()/2);
         }
     }
 
-    public void touchMove(float x, float y){
+    public void touchMove(float x, float y, int _pointer){
         if(isDead) return;
-        if(startTouch){
+        if(startTouch && pointer == _pointer){
             if(!isInRegion(x,y)){
 //                isFail = true;
                 isFinish = true;
@@ -209,19 +217,20 @@ public class Tile extends Group{
             }
         }
     }
-    public void touchUp(float x, float y){
+    public void touchUp(float x, float y, int _pointer){
         if(isDead) return;
 
-        if(startTouch && !isFail){
+        if(startTouch && !isFail && pointer == _pointer){
             isFinish = true;
         }
     }
 
-    public boolean touchDown(float x, float y){
+    public boolean touchDown(float x, float y, int _pointer){
         if(isDead) return false;
 
         if(isInRegion(x,y)){
             startTouch = true;
+            pointer = _pointer;
             previousTouch.x = x;
             previousTouch.y = y;
             return true;
@@ -242,10 +251,16 @@ public class Tile extends Group{
             if(countFlashForDeadMode > 20) countFlashForDeadMode = 0;
             countFlashForDeadMode++;
             return;
+        }else if(isFinish){
+            background.getColor().a = 0.5f;
         }
         if(startTouch){
             updatePositionDot(previousTouch.y);
         }
+    }
+
+    public boolean isDead(){
+        return isDead;
     }
 
     public boolean checkFinish(){
@@ -263,6 +278,12 @@ public class Tile extends Group{
     public void removeFromState(){
         if(font != null) font.dispose();
         this.remove();
+    }
+
+    public float getRealYPosition(){
+        if(type == TileType.TILE_TAB || type == TileType.TILE_OBSTACLE) return getY();
+        else if(type == TileType.TILE_HOLD) return getY() + imageDot.getY();
+        return getY();
     }
 
 }

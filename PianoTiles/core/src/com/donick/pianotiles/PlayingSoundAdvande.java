@@ -41,6 +41,28 @@ public class PlayingSoundAdvande {
         }
     }
 
+    public void finishToNearest(){
+        float duration = player.getPosition() - start;
+
+        float newEnd = 0;
+        if(duration < 0.5f)
+            newEnd = start + 0.5f;
+        else if (duration < 1.0f)
+            newEnd = start + 1.0f;
+        else if(duration < 1.5f)
+            newEnd = start + 1.5f;
+        else if(duration < 2.0f)
+            newEnd = start + 2.0f;
+        else if(duration < 2.5f)
+            newEnd = start + 2.5f;
+        else
+            newEnd = start + 3.0f;
+
+        if(newEnd < end)
+            end = newEnd;
+
+    }
+
     void dispose(){
         player.dispose();
     }

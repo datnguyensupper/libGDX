@@ -23,7 +23,8 @@ public class Tile extends Group{
     public enum TileType{
         TILE_TAB,
         TILE_OBSTACLE,
-        TILE_HOLD
+        TILE_HOLD,
+        TILE_BLANK,
     }
 
     float startMusicPosition;
@@ -39,6 +40,7 @@ public class Tile extends Group{
     int countFlashForDeadMode = 0;
     int pointer = -1;
     PlayingSoundAdvande soundAdvande = null;
+    int point = 1;
 
     private Vector2 previousTouch = Vector2.Zero;
 
@@ -57,10 +59,15 @@ public class Tile extends Group{
      * @param isStart
      */
     Tile(float x, float y,float _startMusicPosition,float _endMusicPosition, float tileWidth, float tileHeight, Group notesGroup, Texture img, Texture dot, float speed,boolean isStart){
-        if(_startMusicPosition == _endMusicPosition){
+        if(_startMusicPosition < 0){
+            //obstacle node
+            updateTile( x, y, tileWidth, tileHeight, notesGroup,img);
+            type = TileType.TILE_BLANK;
+        }else if(_startMusicPosition == _endMusicPosition){
             //blank node
             updateTile( x, y, tileWidth, tileHeight, notesGroup,img);
-        }else if(_endMusicPosition - _startMusicPosition <= 0.5){
+        }
+            else if(_endMusicPosition - _startMusicPosition <= 0.5){
             // short node
             updateTile( x, y,_startMusicPosition, _endMusicPosition, tileWidth, tileHeight, notesGroup, img, isStart);
         }else{
@@ -217,7 +224,10 @@ public class Tile extends Group{
         isFinish = true;
 
         if(soundAdvande != null){
-            soundAdvande.finishToNearest();
+            float duration = soundAdvande.finishToNearest();
+            if(duration > 0.5) {
+                point = Math.max(1, (int) (duration / 0.5f));
+            }
         }
     }
 
@@ -260,14 +270,14 @@ public class Tile extends Group{
 
     public void render(){
         if(isDead) {
-            if(background != null) {
+            if(background != null && type != TileType.TILE_BLANK) {
                 if (countFlashForDeadMode < 10) background.setVisible(false);
                 else background.setVisible(true);
             }
             if(countFlashForDeadMode > 20) countFlashForDeadMode = 0;
             countFlashForDeadMode++;
             return;
-        }else if((isFinish || startTouch) && type != TileType.TILE_OBSTACLE){
+        }else if((isFinish || startTouch) && type != TileType.TILE_OBSTACLE && type != TileType.TILE_BLANK){
             background.getColor().a = 0.5f;
         }
         if(startTouch){
@@ -291,6 +301,13 @@ public class Tile extends Group{
         return type == TileType.TILE_OBSTACLE;
     }
 
+    public int getPoint(){
+        return point;
+    }
+
+    public void resetPoint(){
+        point = 0;
+    }
     public void removeFromState(){
         if(font != null) font.dispose();
         soundAdvande = null;

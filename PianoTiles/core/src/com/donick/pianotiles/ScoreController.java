@@ -28,8 +28,8 @@ public class ScoreController {
         }
     }
 
-    public void increaseScore(){
-        currentScore++;
+    public void increaseScore(int newPoint){
+        currentScore+=newPoint;
     }
 
     public int getCurrentScore(){

@@ -41,7 +41,7 @@ public class PlayingSoundAdvande {
         }
     }
 
-    public void finishToNearest(){
+    public float finishToNearest(){
         float duration = player.getPosition() - start;
 
         float newEnd = 0;
@@ -61,6 +61,7 @@ public class PlayingSoundAdvande {
         if(newEnd < end)
             end = newEnd;
 
+        return end - start;
     }
 
     void dispose(){

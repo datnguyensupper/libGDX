@@ -38,7 +38,7 @@ public class MainGameScene {
     float tileWidth, tileHeight;
     float numberOfTile = 4;
 
-    float tileSpeedBase = 700;
+    float tileSpeedBase = 1000;
     float tileSpeed = tileSpeedBase;
 
     //tmp value
@@ -169,7 +169,8 @@ public class MainGameScene {
         if(isFinish){
             if(!tile.isObstacleTile()){
 //                removeTile(tile);
-                scoreController.increaseScore();
+                scoreController.increaseScore(tile.getPoint());
+                tile.resetPoint();
                 updateScoreText();
             }
         }
@@ -253,6 +254,9 @@ public class MainGameScene {
     }
 
     void playerSoundByNextFreePlayer(Tile tile){
+        if(tile.startMusicPosition == tile.endMusicPosition){
+            return;
+        }
         PlayingSoundAdvande chosenPlayer = null;
         if(arrayOfPlayer != null) {
             for (int i = 0; i < arrayOfPlayer.size-1; i++) {
@@ -308,7 +312,7 @@ public class MainGameScene {
     void createTitles(float y, boolean isStart){
         if(isDead) return;
         if(nodeArray.size == 0) {
-            doDead();
+//            doDead();
             return;
         }
 
@@ -318,6 +322,7 @@ public class MainGameScene {
 
         NodeInfo nodeInfo = nodeArray.get(0);
         nodeArray.removeValue(nodeInfo,true);
+
         //tab tile
 //        float x, float y,float _startMusicPosition,float _endMusicPosition, float tileWidth, float tileHeight, Group notesGroup, Texture img, Texture dot, float speed,boolean isStart
         Tile tile = new Tile(x,y,nodeInfo.startTime,nodeInfo.endTime,tileWidth,tileHeight,notesGroup,imgTile,imgDotTile,tileSpeed,isStart);
@@ -332,18 +337,29 @@ public class MainGameScene {
                 }
             }
         }
+
+        if(nodeArray.size == 0){
+            //create last row empty
+            for (int i = 0; i < numberOfTileOneRow; i++) {
+                if (i != xID) {
+                    Tile tileBlank = new Tile(i * tileWidth, y + tile.getHeight() , -1, -1, tileWidth, tileHeight, notesGroup, imgTile, null, tileSpeed, false);
+                    arrayOfTiles.add(tileBlank);
+                }
+            }
+        }
+
         // hold tile
 //        Tile tile = new Tile(x,y,startPosition,2,tileWidth,tileHeight,notesGroup,imgTile,imgDotTile,tileSpeed);
         if(!isGod) {
 
             if (scoreController.getCurrentScore() >= 125)
-                tileSpeed = tileSpeedBase * 1.75f;
+                tileSpeed = tileSpeedBase * 1.4f;
             else if (scoreController.getCurrentScore() >= 100)
-                tileSpeed = tileSpeedBase * 1.5f;
+                tileSpeed = tileSpeedBase * 1.3f;
             else if (scoreController.getCurrentScore() >= 50)
-                tileSpeed = tileSpeedBase * 1.25f;
+                tileSpeed = tileSpeedBase * 1.2f;
             else if (scoreController.getCurrentScore() >= 25)
-                tileSpeed = tileSpeedBase * 1.125f;
+                tileSpeed = tileSpeedBase * 1.1f;
             else
                 tileSpeed = tileSpeedBase;
 

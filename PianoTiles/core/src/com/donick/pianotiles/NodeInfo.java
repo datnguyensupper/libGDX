@@ -26,33 +26,33 @@ public class NodeInfo {
             case C4:
                 startTime = 0;break;
             case D4:
-                startTime = 0.5f;break;
-            case E4:
-                startTime = 1.5f;break;
-            case F4:
                 startTime = 3f;break;
-            case G4:
-                startTime = 4.5f;break;
-            case A4:
+            case E4:
                 startTime = 6f;break;
+            case F4:
+                startTime = 9f;break;
+            case G4:
+                startTime = 12f;break;
+            case A4:
+                startTime = 15f;break;
             case B4:
-                startTime = 7.5f;break;
+                startTime = 18f;break;
             case C5:
-                startTime = 9.5f;break;
-            case D5:
-                startTime = 12.5f;break;
-            case E5:
-                startTime = 14.5f;break;
-            case F5:
-                startTime = 17f;break;
-            case G5:
-                startTime = 19.5f;break;
-            case A6:
                 startTime = 21f;break;
+            case D5:
+                startTime = 24f;break;
+            case E5:
+                startTime = 27f;break;
+            case F5:
+                startTime = 30f;break;
+            case G5:
+                startTime = 33f;break;
+            case A6:
+                startTime = 36f;break;
             case A3:
-                startTime = 22f;break;
+                startTime = 39f;break;
             case B3:
-                startTime = 25f;break;
+                startTime = 42f;break;
             default:
                 startTime = endTime = 0;
                 return;
